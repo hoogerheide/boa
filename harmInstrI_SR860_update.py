@@ -109,7 +109,7 @@ class SR830(object):
 
     def ReadValues(self):
         # Populate properties with values read from instrument
-        # All .ask replaced with .query, str2num function to format output
+        # Update: .ask replaced with .query, str2num function to format output
         self._filter = self.inv_filterdict[int(self.ctrl.query("OFLT?")[:-1])]
         self._filterslope = self.inv_filterslopedict[int(self.ctrl.query("OFSL?")[:-1])]
         self._sensitivity = self.inv_sensitivitydict[int(self.ctrl.query("SENS?")[:-1])]
@@ -332,7 +332,7 @@ class SR860(object):
        
     def ReadValues(self):
         # Populate properties with values read from instrument
-        # All .ask replaced with .query, str2num function to format output
+        # Update: .ask replaced with .query, str2num function to format output
         self._filter = self.inv_filterdict[int(self.ctrl.query("OFLT?")[:-1])]
         self._filterslope = self.inv_filterslopedict[int(self.ctrl.query("OFSL?")[:-1])]
         self._sensitivity = self.inv_sensitivitydict[int(self.ctrl.query("SCAL?")[:-1])]
@@ -442,7 +442,6 @@ class SR860(object):
         # TODO: can't be greater than +/-10.5 V. Check for this.
         self._dcVoltage = value
         self.ctrl.write("AUXV 0, " + `value`) # Check AUXV 0 address for SR860
-        # temp- print("AUXV 0, " + `value`)
 
     @property
     def phase(self):

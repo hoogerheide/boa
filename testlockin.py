@@ -1,4 +1,4 @@
-import harmInstrI
+import harmInstrI_SR860_update as harmInstrI
 import numpy
 lockin = harmInstrI.SR860()
 # print lockin.dcVoltage
