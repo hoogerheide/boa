@@ -17,14 +17,16 @@ print(harmInstrI.str2num(lockin.ctrl.query("FREQ?"))[0])
 # Set parameter values
 scnTime = 15
 # Seconds- could make function to convert from minutes
-scnStart = 0.01
-scnEnd = 3.5
+scnStart = 0.05
+scnEnd = -0.05
 # Voltage- -5.00V < V < 5.00V
 scnInt = 0
 # Seconds/msec- 0 = 8ms 
 
+
 lockin.ctrl.write("SCNRST")
 # Resets scan regardless of state, resets to begin parameter (SCNENBL may be redundant)
+# lockin.ctrl.write("SCNENBL OFF")
 lockin.ctrl.write("SCNPAR REFD")
 # Set scan parameter to REFDc (reference DC)
 lockin.ctrl.write("SCNLOG LIN")
@@ -45,4 +47,18 @@ lockin.ctrl.write("SCNENBL ON")
 lockin.ctrl.write("SCNRUN")
 print(lockin.ctrl.write("SCNSTATE?"))
 
-# SR860 capture commands
+""" # SR860 capture commands
+lockin.ctrl.write("CAPTURECFG XY")
+# Set capture configuration to X and Y
+lockin.ctrl.write("CAPTURERATEMAX 325000")
+# Set capture configuration to max rate in Hz
+    # lockin.ctrl.write("CAPTURERATEMAX" + `maxRate`)
+    # maxRate = 325000
+lockin.ctrl.write("CAPTURERATE 0")
+# Set capture rate to maximum rate /2^n for n=0
+    # lockin.ctrl.write("CAPTURERATE" + `n`)
+    # n = 0
+lockin.ctrl.write("CAPTURESTART ONE, IMM")
+# Set data capture for oneshot (fills buffer once) acquisition with immediate start (could implement a hardware trigger)
+print(lockin.ctrl.query("CAPTURERATEMAX?"))
+print(lockin.ctrl.query("CAPTURELEN?"))"""
