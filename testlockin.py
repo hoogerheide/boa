@@ -12,3 +12,37 @@ print(harmInstrI.str2num(lockin.ctrl.query("FREQ?"))[0])
         # Capturestop command- stop when it becomes full, Capturelen to 1074 kbytes, capturecfg xy, 
         # captureratemax, actual rate /n^2, fill buffer highest sampling rate over 55s
         # Captureget - read data back
+        # Could structure this as a function w/ dictionary of values
+
+# Set parameter values
+scnTime = 15
+# Seconds- could make function to convert from minutes
+scnStart = 0.01
+scnEnd = 3.5
+# Voltage- -5.00V < V < 5.00V
+scnInt = 0
+# Seconds/msec- 0 = 8ms 
+
+lockin.ctrl.write("SCNRST")
+# Resets scan regardless of state, resets to begin parameter (SCNENBL may be redundant)
+lockin.ctrl.write("SCNPAR REFD")
+# Set scan parameter to REFDc (reference DC)
+lockin.ctrl.write("SCNLOG LIN")
+# Set scan type to linear
+lockin.ctrl.write("SCNEND UP")
+# Set scan end mode to UP (updown)
+lockin.ctrl.write("SCNSEC " + `scnTime`)
+# Set scan time to x seconds (scnTime)
+lockin.ctrl.write("SCNDCATTN 0")
+# Set dc output attenuator mode to auto 0 or fixed 1
+lockin.ctrl.write("SCNDC BEG, " + `scnStart`)
+lockin.ctrl.write("SCNDC END, " + `scnEnd`)
+# Set beginning (BEG) and end (END) dc reference amplitude to V, where -5.00V < V < 5.00V
+lockin.ctrl.write("SCNINRVL " + `scnInt`)
+# Set parameter update interval 0 <= scnInt <= 16 according to numeric table (manual pg 129)
+lockin.ctrl.write("SCNENBL ON")
+# Set scan parameter to begin value but does not start scan
+lockin.ctrl.write("SCNRUN")
+print(lockin.ctrl.write("SCNSTATE?"))
+
+# SR860 capture commands

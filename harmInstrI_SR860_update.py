@@ -322,7 +322,7 @@ class SR860(object):
         self.inv_reservedict = {v: k for k, v in self.reservedict.items()}
         #self.Initialize()
         # initialize- temp
-        self.ReadValues()
+        # self.ReadValues()
         
     def Initialize(self):
         # Initialize lockin to correct state for second harmonics measurement- confirm correct state for SR860
