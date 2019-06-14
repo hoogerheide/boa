@@ -2,6 +2,9 @@ import harmInstrI_SR860_update as harmInstrI
 import numpy as np
 import time
 import struct
+import matplotlib
+matplotlib.rcParams['backend'] = 'wxagg'
+import matplotlib.pyplot as plt
 
 #  This is a function to format the query output from string--> list of strings --> list of numbers
 def str2num(str):
@@ -47,8 +50,8 @@ filterdict = {"1 us": (0, 1e-6),
                            "3 ms": (7, 3e-3),
                            "10 ms": (8, 10e-3),
                            "30 ms": (9, 30e-3),
-                           "100 ms": (10, 100e-3.),
-                           "300 ms": (11, 300e-3.),
+                           "100 ms": (10, 100e-3),
+                           "300 ms": (11, 300e-3),
                            "1 s": (12, 1.),
                            "3 s": (13, 3.),
                            "10 s": (14, 10.),
@@ -59,7 +62,7 @@ filterdict = {"1 us": (0, 1e-6),
                            "3 ks": (19, 3e3),
                            "10 ks": (20, 10e3),
                            "30 ks": (21, 30e3)}
-tConstant=lockin.inv_filterdict[int(lockin.ctrl.query("OFLT?")[:-1])]
+tConstant=lockin.filterdict[lockin.inv_filterdict[int(lockin.ctrl.query("OFLT?")[:-1])]][1]
 
 maxRate = str2num(lockin.ctrl.query("CAPTURERATEMAX?"))[0]
 # Set capture rate to max rate in Hz, where T=100ms, maxcapture=325kHz
@@ -78,7 +81,7 @@ capdict = {"1 to 10 us": (0, 1.25e6),
                            "3 s to 30 ks": (10, 152.59)}
 fCuttoff= 5/tConstant
 # Write function to calculate fCuttoff for low-pass filter based on tConstant
-maxArray = maxRate./2**np.arange(21)
+maxArray = maxRate/2**np.arange(21)
 nFactor = np.where(maxArray>fCuttoff)[0][-1]
 capLength = np.ceil(maxArray[nFactor]*scnTime*8/1000)
 
@@ -90,7 +93,7 @@ lockin.ctrl.write("SCNPAR REFD")
 # Set scan parameter to REFDc (reference DC)
 lockin.ctrl.write("SCNLOG LIN")
 # Set scan type to linear
-lockin.ctrl.write("SCNEND UP")
+lockin.ctrl.write("SCNEND 0")
 # Set scan end mode to UP (updown), RE (repeat), ON (once)
 lockin.ctrl.write("SCNSEC " + `scnTime`)
 # Set scan time to x seconds (scnTime)
@@ -103,42 +106,43 @@ lockin.ctrl.write("SCNINRVL " + `scnInt`)
 # Set parameter update interval 0 <= scnInt <= 16 according to numeric table (manual pg 129)
 lockin.ctrl.write("SCNENBL ON")
 # Set scan parameter to begin value but does not start scan
-lockin.ctrl.write("SCNRUN")
-print(lockin.ctrl.write("SCNSTATE?"))
 
 # SR860 capture commands
 lockin.ctrl.write("CAPTURECFG XY")
 # Set capture configuration to X and Y
 #lockin.ctrl.write("CAPTURERATEMAX " + `maxRate`)
 # Set capture configuration to max rate in Hz
-lockin.ctrl.write("CAPTURERATE " + `nFactor`))
+lockin.ctrl.write("CAPTURERATE " + `nFactor`)
 # Set capture rate to maximum rate /2^n for n=0
-lockin.ctrl.write("CAPTURESTART ONE, IMM")
-# Set data capture for oneshot (fills buffer once) acquisition with immediate start (could implement a hardware trigger)
 lockin.ctrl.write("CAPTURELEN " + `capLength`)
 print(lockin.ctrl.query("CAPTURERATEMAX?"))
 print(lockin.ctrl.query("CAPTURELEN?"))
 print(lockin.ctrl.query("CAPTUREBYTES?"))
 
-# Data capture results
-startTime = time.time()
-# Starting time capture
-lockin.ctrl.query("CAPTUREGET?")
-# Returns binary block of capture contents- offset i (kB) with length j < 64 (kb) 
-duration = time.time() - startTime
-print(duration)
-# Ending time capture, print duration of data transfer
+lockin.ctrl.write("SCNRUN")
+lockin.ctrl.write("CAPTURESTART ONE, IMM")
 
-""" npoints = 256
-d = list()
-for i in range(npoints):
-    d.append(lockin.ctrl.query("CAPTUREVAL? %i" % i)) """
+# Begin data capture only after SCNSTATE reflects done
+state = 0
+while state < 4:
+    state=str2num(lockin.ctrl.query("SCNSTATE?"))[0]
+    print(state)
+
+lockin.ctrl.write("CAPTURESTOP")
+# Set data capture for oneshot (fills buffer once) acquisition with immediate start (could implement a hardware trigger)
+
+# Data capture results
 # Unpacking binary data
-lockin.ctrl.write("CAPTUREGET? 0,1")
+
+lockin.ctrl.write("CAPTUREGET? 0,%i" % capLength)
 buf = lockin.ctrl.read_raw()
 hdr = struct.unpack_from('<cc', buf)
-data = struct.unpack_from(‘f’, buf, 1+noffset)
 datalength = struct.unpack_from('<' + 'c'*int(hdr[1]), buf, 2)
-data = struct.unpack_from(‘<’ + “”.join(datalength) + ‘f’, buf, 2 + int(hdr[1]))
+#print(hdr, '<%if' % (int("".join(datalength))/4))
+data = struct.unpack_from('<%if' % (int("".join(datalength))/4), buf, 2 + int(hdr[1]))
 Y = np.array(data[1::2])
 X = np.array(data[0::2])
+
+plt.plot(np.arange(len(X))/maxArray[nFactor], X)
+plt.plot(np.arange(len(Y))/maxArray[nFactor], Y)
+plt.show()

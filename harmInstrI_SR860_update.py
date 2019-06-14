@@ -89,10 +89,10 @@ class SR830(object):
         # Set dictionaries of values
         self.gains = dict({0.5: 0.05, 1: 0.1, 1.5: 0.2, 2.0: 0.5, 2.5: 1, 3.0: 2, 3.5: 5, 4.0: 10, 4.5: 20, 5.0: 50, 5.5: 100, 6.0: 200, 6.5: 500})
         
-        self.filterdict = filterdict
+        """self.filterdict = filterdict
         self.filterslopedict = filterslopedict
         self.sensitivitydict = sensitivitydict
-        self.reservedict = reservedict
+        self.reservedict = reservedict"""
         
         self.inv_filterdict = {v[0]: k for k, v in self.filterdict.items()}
         self.inv_filterslopedict = {v: k for k, v in self.filterslopedict.items()}
@@ -375,10 +375,10 @@ class SR860(object):
         # Set dictionaries of values- may need to update values
         self.gains = dict({0.5: 0.05, 1: 0.1, 1.5: 0.2, 2.0: 0.5, 2.5: 1, 3.0: 2, 3.5: 5, 4.0: 10, 4.5: 20, 5.0: 50, 5.5: 100, 6.0: 200, 6.5: 500})
         
-        self.filterdict = filterdict
+        """self.filterdict = filterdict
         self.filterslopedict = filterslopedict
         self.sensitivitydict = sensitivitydict
-        self.reservedict = reservedict
+        self.reservedict = reservedict"""
         
         self.inv_filterdict = {v[0]: k for k, v in self.filterdict.items()}
         self.inv_filterslopedict = {v: k for k, v in self.filterslopedict.items()}
