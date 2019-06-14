@@ -1,6 +1,12 @@
 import harmInstrI_SR860_update as harmInstrI
-import numpy
+import numpy as np
 import time
+import struct
+
+#  This is a function to format the query output from string--> list of strings --> list of numbers
+def str2num(str):
+    li = str[:-1].split(",")
+    return map(float,li)
 
 lockin = harmInstrI.SR860()
 # print lockin.dcVoltage
@@ -20,7 +26,9 @@ lockin.dcVoltage = 0.2
 # Calculations for scan parameters
         # IEEE 488 parameter 1.8MB/s, sampling cutoff frequency guesstimate ~50Hz
 # Set parameter values
+# Calculate capture length based on scan time
 scnTime = 15
+
 # Seconds- could make function to convert from minutes
 scnStart = 0.05
 scnEnd = -0.05
@@ -29,10 +37,51 @@ scnInt = 0
 # Seconds or msec- 0 = 8ms 
 nFactor = 0
 # 2^n division factor, 0 <= n <= 20 where streamrate=maxrate/2^n
-maxRate = 1250000
+filterdict = {"1 us": (0, 1e-6),
+                           "3 us": (1, 3e-6),
+                           "10 us": (2, 10e-6),
+                           "30 us": (3, 30e-6),
+                           "100 us": (4, 100e-6),
+                           "300 us": (5, 300e-6),
+                           "1 ms": (6, 1e-3),
+                           "3 ms": (7, 3e-3),
+                           "10 ms": (8, 10e-3),
+                           "30 ms": (9, 30e-3),
+                           "100 ms": (10, 100e-3.),
+                           "300 ms": (11, 300e-3.),
+                           "1 s": (12, 1.),
+                           "3 s": (13, 3.),
+                           "10 s": (14, 10.),
+                           "30 s": (15, 30.),
+                           "100 s": (16, 100),
+                           "300 s": (17, 300),
+                           "1 ks": (18, 1e3),
+                           "3 ks": (19, 3e3),
+                           "10 ks": (20, 10e3),
+                           "30 ks": (21, 30e3)}
+tConstant=lockin.inv_filterdict[int(lockin.ctrl.query("OFLT?")[:-1])]
+
+maxRate = str2num(lockin.ctrl.query("CAPTURERATEMAX?"))[0]
 # Set capture rate to max rate in Hz, where T=100ms, maxcapture=325kHz
-capLength = 4096
-# 1 <= n <= 4096
+# 1uS < T < 10uS, maxcapture=1250000
+# Could create dictionary to select- write function to calculate capLength from maxRate
+capdict = {"1 to 10 us": (0, 1.25e6),
+                           "30 us": (1, 625e3),
+                           "100 us": (2, 325e3),
+                           "300 us": (3, 156.25e3),
+                           "1 ms": (4, 78.125e3),
+                           "3 to 10 ms": (5, 39.0625e3),
+                           "30 ms": (6, 9765.62),
+                           "100 ms": (7, 2441.41),
+                           "300 ms": (8, 1220.7),
+                           "1 s": (9, 305.18),
+                           "3 s to 30 ks": (10, 152.59)}
+fCuttoff= 5/tConstant
+# Write function to calculate fCuttoff for low-pass filter based on tConstant
+maxArray = maxRate./2**np.arange(21)
+nFactor = np.where(maxArray>fCuttoff)[0][-1]
+capLength = np.ceil(maxArray[nFactor]*scnTime*8/1000)
+
 
 lockin.ctrl.write("SCNRST")
 # Resets scan regardless of state, resets to begin parameter (SCNENBL may be redundant)
@@ -62,7 +111,7 @@ lockin.ctrl.write("CAPTURECFG XY")
 # Set capture configuration to X and Y
 #lockin.ctrl.write("CAPTURERATEMAX " + `maxRate`)
 # Set capture configuration to max rate in Hz
-print(lockin.ctrl.write("CAPTURERATE " + `nFactor`))
+lockin.ctrl.write("CAPTURERATE " + `nFactor`))
 # Set capture rate to maximum rate /2^n for n=0
 lockin.ctrl.write("CAPTURESTART ONE, IMM")
 # Set data capture for oneshot (fills buffer once) acquisition with immediate start (could implement a hardware trigger)
@@ -84,3 +133,12 @@ print(duration)
 d = list()
 for i in range(npoints):
     d.append(lockin.ctrl.query("CAPTUREVAL? %i" % i)) """
+# Unpacking binary data
+lockin.ctrl.write("CAPTUREGET? 0,1")
+buf = lockin.ctrl.read_raw()
+hdr = struct.unpack_from('<cc', buf)
+data = struct.unpack_from(‘f’, buf, 1+noffset)
+datalength = struct.unpack_from('<' + 'c'*int(hdr[1]), buf, 2)
+data = struct.unpack_from(‘<’ + “”.join(datalength) + ‘f’, buf, 2 + int(hdr[1]))
+Y = np.array(data[1::2])
+X = np.array(data[0::2])

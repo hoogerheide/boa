@@ -16,70 +16,70 @@ def str2num(str):
 
 rm=ResourceManager()
 
-# Define dictionary values for SR830 object
-
-sensitivitydict =  {"2 nV/fA": 0,
-                            "5 nV/fA": 1,
-                            "10 nV/fA": 2,
-                            "20 nV/fA": 3,
-                            "50 nV/fA": 4,
-                            "100 nV/fA": 5,
-                            "200 nV/fA": 6,
-                            "500 nV/fA": 7,
-                            "1 uV/pA": 8,
-                            "2 uV/pA": 9,
-                            "5 uV/pA": 10,
-                            "10 uV/pA": 11,
-                            "20 uV/pA": 12,
-                            "50 uV/pA": 13,
-                            "100 uV/pA": 14,
-                            "200 uV/pA": 15,
-                            "500 uV/pA": 16,
-                            "1 mV/nA": 17,
-                            "2 mV/nA": 18,
-                            "5 mV/nA": 19,
-                            "10 mV/nA": 20,
-                            "20 mV/nA": 21,
-                            "50 mV/nA": 22,
-                            "100 mV/nA": 23,
-                            "200 mV/nA": 24,
-                            "500 mV/nA": 25,
-                            "1 V/uA": 26}
-                            
-filterdict = {"10 us": (0, 10e-6),
-                           "30 us": (1, 30e-6),
-                           "100 us": (2, 100e-6),
-                           "300 us": (3, 300e-6),
-                           "1 ms": (4, 1e-3),
-                           "3 ms": (5, 3e-3),
-                           "10 ms": (6, 10e-3),
-                           "30 ms": (7, 30e-3),
-                           "100 ms": (8, 100e-3),
-                           "300 ms": (9, 300e-3),
-                           "1 s": (10, 1.),
-                           "3 s": (11, 3.),
-                           "10 s": (12, 10.),
-                           "30 s": (13, 30.),
-                           "100 s": (14, 100.),
-                           "300 s": (15, 300.),
-                           "1 ks": (16, 1e3),
-                           "3 ks": (17, 3e3),
-                           "10 ks": (18, 10e3),
-                           "30 ks": (19, 30e3)}
-                           
-filterslopedict = {"6 dB/oct": 0,
-                                "12 dB/oct": 1,
-                                "18 dB/oct": 2,
-                                "24 dB/oct": 3}
-                                
-reservedict = {"high": 0,
-                                "normal": 1,
-                                "low noise": 2}
-
-
 class SR830(object):
     """ Stanford Research Systems SR830 instrument class 
         Manual: https://www.thinksrs.com/downloads/pdfs/manuals/SR830m.pdf """
+    
+    # Define dictionary values for SR830 object
+
+    sensitivitydict =  {"2 nV/fA": 0,
+                                "5 nV/fA": 1,
+                                "10 nV/fA": 2,
+                                "20 nV/fA": 3,
+                                "50 nV/fA": 4,
+                                "100 nV/fA": 5,
+                                "200 nV/fA": 6,
+                                "500 nV/fA": 7,
+                                "1 uV/pA": 8,
+                                "2 uV/pA": 9,
+                                "5 uV/pA": 10,
+                                "10 uV/pA": 11,
+                                "20 uV/pA": 12,
+                                "50 uV/pA": 13,
+                                "100 uV/pA": 14,
+                                "200 uV/pA": 15,
+                                "500 uV/pA": 16,
+                                "1 mV/nA": 17,
+                                "2 mV/nA": 18,
+                                "5 mV/nA": 19,
+                                "10 mV/nA": 20,
+                                "20 mV/nA": 21,
+                                "50 mV/nA": 22,
+                                "100 mV/nA": 23,
+                                "200 mV/nA": 24,
+                                "500 mV/nA": 25,
+                                "1 V/uA": 26}
+                                
+    filterdict = {"10 us": (0, 10e-6),
+                            "30 us": (1, 30e-6),
+                            "100 us": (2, 100e-6),
+                            "300 us": (3, 300e-6),
+                            "1 ms": (4, 1e-3),
+                            "3 ms": (5, 3e-3),
+                            "10 ms": (6, 10e-3),
+                            "30 ms": (7, 30e-3),
+                            "100 ms": (8, 100e-3),
+                            "300 ms": (9, 300e-3),
+                            "1 s": (10, 1.),
+                            "3 s": (11, 3.),
+                            "10 s": (12, 10.),
+                            "30 s": (13, 30.),
+                            "100 s": (14, 100.),
+                            "300 s": (15, 300.),
+                            "1 ks": (16, 1e3),
+                            "3 ks": (17, 3e3),
+                            "10 ks": (18, 10e3),
+                            "30 ks": (19, 30e3)}
+                            
+    filterslopedict = {"6 dB/oct": 0,
+                                    "12 dB/oct": 1,
+                                    "18 dB/oct": 2,
+                                    "24 dB/oct": 3}
+                                    
+    reservedict = {"high": 0,
+                                    "normal": 1,
+                                    "low noise": 2}
+    
     def __init__( self, address=8 ):
         self.ctrl = rm.open_resource( "GPIB::%s" % address )
         self.ctrl.open()
@@ -300,9 +300,73 @@ class SR830(object):
         """ For back compatibility """
         return self.collectPointsRTheta(numPoints, pointInterval)
 
+
 class SR860(object):
     """ Stanford Research Systems SR860 instrument class 
         Manual: https://www.thinksrs.com/downloads/pdfs/manuals/SR860m.pdf """
+    # Define dictionary values for SR860 object
+
+    sensitivitydict =  {"1 V[uA]": 0,
+                                "500 mV/nA": 1,
+                                "200 mV/nA": 2,
+                                "100 mV/nA": 3,
+                                "50 mV/nA": 4,
+                                "20 mV/nA": 5,
+                                "10 mV/nA": 6,
+                                "5 mV/nA": 7,
+                                "2 mV/nA": 8,
+                                "1 mV/nA": 9,
+                                "500 uV/pA": 10,
+                                "200 uV/pA": 11,
+                                "100 uV/pA": 12,
+                                "50 uV/pA": 13,
+                                "20 uV/pA": 14,
+                                "10 uV/pA": 15,
+                                "5 uV/pA": 16,
+                                "2 uV/pA": 17,
+                                "1 uV/pA": 18,
+                                "500 nV/fA": 19,
+                                "200 mV/fA": 20,
+                                "100 nV/fA": 21,
+                                "50 nV/fA": 22,
+                                "20 nV/fA": 23,
+                                "10 nV/fA": 24,
+                                "5 nV/fA": 25,
+                                "2 nV/fA": 26,
+                                "1 nV/fA": 27}
+                                
+    filterdict = {"1 us": (0, 1e-6),
+                            "3 us": (1, 3e-6),
+                            "10 us": (2, 10e-6),
+                            "30 us": (3, 30e-6),
+                            "100 us": (4, 100e-6),
+                            "300 us": (5, 300e-6),
+                            "1 ms": (6, 1e-3),
+                            "3 ms": (7, 3e-3),
+                            "10 ms": (8, 10e-3),
+                            "30 ms": (9, 30e-3),
+                            "100 ms": (10, 100e-3),
+                            "300 ms": (11, 300e-3),
+                            "1 s": (12, 1.),
+                            "3 s": (13, 3.),
+                            "10 s": (14, 10.),
+                            "30 s": (15, 30.),
+                            "100 s": (16, 100),
+                            "300 s": (17, 300),
+                            "1 ks": (18, 1e3),
+                            "3 ks": (19, 3e3),
+                            "10 ks": (20, 10e3),
+                            "30 ks": (21, 30e3)}
+                            
+    filterslopedict = {"6 dB/oct": 0,
+                                    "12 dB/oct": 1,
+                                    "18 dB/oct": 2,
+                                    "24 dB/oct": 3}
+                                    
+    reservedict = {"high": 0,
+                                    "normal": 1,
+                                    "low noise": 2}
+
     def __init__( self, address=4 ):
         self.ctrl = rm.open_resource( "GPIB::%s" % address )
         self.ctrl.open()
@@ -531,6 +595,63 @@ class SR860(object):
 
 class lockinZapper(SR830):
     """ Stripped-down lockin for zapping membranes. Now obsolete. """
+    sensitivitydict =  {"2 nV/fA": 0,
+                                "5 nV/fA": 1,
+                                "10 nV/fA": 2,
+                                "20 nV/fA": 3,
+                                "50 nV/fA": 4,
+                                "100 nV/fA": 5,
+                                "200 nV/fA": 6,
+                                "500 nV/fA": 7,
+                                "1 uV/pA": 8,
+                                "2 uV/pA": 9,
+                                "5 uV/pA": 10,
+                                "10 uV/pA": 11,
+                                "20 uV/pA": 12,
+                                "50 uV/pA": 13,
+                                "100 uV/pA": 14,
+                                "200 uV/pA": 15,
+                                "500 uV/pA": 16,
+                                "1 mV/nA": 17,
+                                "2 mV/nA": 18,
+                                "5 mV/nA": 19,
+                                "10 mV/nA": 20,
+                                "20 mV/nA": 21,
+                                "50 mV/nA": 22,
+                                "100 mV/nA": 23,
+                                "200 mV/nA": 24,
+                                "500 mV/nA": 25,
+                                "1 V/uA": 26}
+                                
+    filterdict = {"10 us": (0, 10e-6),
+                            "30 us": (1, 30e-6),
+                            "100 us": (2, 100e-6),
+                            "300 us": (3, 300e-6),
+                            "1 ms": (4, 1e-3),
+                            "3 ms": (5, 3e-3),
+                            "10 ms": (6, 10e-3),
+                            "30 ms": (7, 30e-3),
+                            "100 ms": (8, 100e-3),
+                            "300 ms": (9, 300e-3),
+                            "1 s": (10, 1.),
+                            "3 s": (11, 3.),
+                            "10 s": (12, 10.),
+                            "30 s": (13, 30.),
+                            "100 s": (14, 100.),
+                            "300 s": (15, 300.),
+                            "1 ks": (16, 1e3),
+                            "3 ks": (17, 3e3),
+                            "10 ks": (18, 10e3),
+                            "30 ks": (19, 30e3)}
+                            
+    filterslopedict = {"6 dB/oct": 0,
+                                    "12 dB/oct": 1,
+                                    "18 dB/oct": 2,
+                                    "24 dB/oct": 3}
+                                    
+    reservedict = {"high": 0,
+                                    "normal": 1,
+                                    "low noise": 2}
     
     def __init__( self, address=8 ):
         self.ctrl = rm.open_resource( "GPIB::%s" % address )
