@@ -217,6 +217,8 @@ class WorkerThread(Thread):
     #       and configuration information for the entire experiment.
         self.lockin = harmInstr.SR860()
         self.lockin.Initialize()
+        self.lockin.Scan()
+        self.lockin.Capture()
         #self.filt = harmInstr.FD9002()
         
         # Initialize data structure

@@ -122,7 +122,7 @@ starttime = time.time()
 lockin.ctrl.write("SCNRUN")
 lockin.ctrl.write("CAPTURESTART ONE, IMM")
 
-# Begin data capture only after SCNSTATE reflects done
+# Begin data capture get only after SCNSTATE reflects done
 state = 0
 while state < 4:
     state=str2num(lockin.ctrl.query("SCNSTATE?"))[0]
@@ -149,8 +149,8 @@ X=X[0:idx]
 Y=Y[0:idx]
 tStep = scnTime/idx
 vTime = np.arange(0,scnTime,tStep)
-vStep = np.arange(scnStart,scnEnd,tStep)
-
+vStep = np.arange(scnStart,scnEnd,(scnStart-scnEnd)/idx)
+# Return vstep, x and y 
 # Plot 
 """plt.plot(np.arange(len(X))/maxArray[nFactor], X)
 plt.plot(np.arange(len(Y))/maxArray[nFactor], Y)
