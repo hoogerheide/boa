@@ -44,7 +44,7 @@ from scipy.optimize import curve_fit
 import json
 from threading import Thread
 
-import harmInstrI as harmInstr
+import harmInstrI_SR860_update as harmInstr
 
 class NumpyAwareJSONEncoder(json.JSONEncoder):
     """ Utility to write numpy array objects to JSON file. """
@@ -338,7 +338,7 @@ class WorkerThread(Thread):
         #lockin.autoPhase()
         #time.sleep(1.5*tfactor*tc)        
         
-        # Set up sweep/scan 
+        # Set up sweep/scan, replace block
         for i,V in enumerate(Vs):
             self.PostEvent(WorkerStatus("Measuring second harmonic amplitude... Vdc = %0.1f mV..." % V))
             lockin.dcVoltage = V/params['dcInputGain']

@@ -38,8 +38,7 @@ scnEnd = -0.05
 # Voltage- -5.00V < V < 5.00V
 scnInt = 0
 # Seconds or msec- 0 = 8ms 
-nFactor = 0
-# 2^n division factor, 0 <= n <= 20 where streamrate=maxrate/2^n
+
 filterdict = {"1 us": (0, 1e-6),
                            "3 us": (1, 3e-6),
                            "10 us": (2, 10e-6),
@@ -119,6 +118,7 @@ print(lockin.ctrl.query("CAPTURERATEMAX?"))
 print(lockin.ctrl.query("CAPTURELEN?"))
 print(lockin.ctrl.query("CAPTUREBYTES?"))
 
+starttime = time.time()
 lockin.ctrl.write("SCNRUN")
 lockin.ctrl.write("CAPTURESTART ONE, IMM")
 
@@ -132,9 +132,10 @@ lockin.ctrl.write("CAPTURESTOP")
 # Set data capture for oneshot (fills buffer once) acquisition with immediate start (could implement a hardware trigger)
 
 # Data capture results
-# Unpacking binary data
+# Unpacking binary data- time start now
 
 lockin.ctrl.write("CAPTUREGET? 0,%i" % capLength)
+t = time.time()-starttime
 buf = lockin.ctrl.read_raw()
 hdr = struct.unpack_from('<cc', buf)
 datalength = struct.unpack_from('<' + 'c'*int(hdr[1]), buf, 2)
@@ -142,7 +143,15 @@ datalength = struct.unpack_from('<' + 'c'*int(hdr[1]), buf, 2)
 data = struct.unpack_from('<%if' % (int("".join(datalength))/4), buf, 2 + int(hdr[1]))
 Y = np.array(data[1::2])
 X = np.array(data[0::2])
+# Chop off trailing data in buffer after stop capture
+idx = np.where(t>scnTime)[0]
+X=X[0:idx]
+Y=Y[0:idx]
+tStep = scnTime/idx
+vTime = np.arange(0,scnTime,tStep)
+vStep = np.arange(scnStart,scnEnd,tStep)
 
-plt.plot(np.arange(len(X))/maxArray[nFactor], X)
+# Plot 
+"""plt.plot(np.arange(len(X))/maxArray[nFactor], X)
 plt.plot(np.arange(len(Y))/maxArray[nFactor], Y)
-plt.show()
+plt.show()"""

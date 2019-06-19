@@ -263,9 +263,11 @@ class SR830(object):
         data = dict()
         data['vals'] = vals
         data['X'] = numpy.empty(vals.size)
-        data['Xerr'] = numpy.empty(vals.size)
+        data['Xerr'] = numpy.zeros(vals.size)
+        # Xerr- array of zeroes for compatibility
         data['Y'] = numpy.empty(vals.size)
-        data['Yerr'] = numpy.empty(vals.size)
+        data['Yerr'] = numpy.zeros(vals.size)
+        # Yerr- array of zeroes for compatibility
         
         for i,val in enumerate(vals):
             self.__setattr__(propertyName, val)
@@ -384,15 +386,49 @@ class SR860(object):
         self.inv_filterslopedict = {v: k for k, v in self.filterslopedict.items()}
         self.inv_sensitivitydict = {v: k for k, v in self.sensitivitydict.items()}
         self.inv_reservedict = {v: k for k, v in self.reservedict.items()}
-        #self.Initialize()
-        # initialize- temp
         # self.ReadValues()
         
     def Initialize(self):
-        # Initialize lockin to correct state for second harmonics measurement- confirm correct state for SR860
+        # Initialize lockin to correct state for second harmonics measurement
         self.ctrl.write("RTRG SIN") # set reference to "SINE"- double check correct command, it may be default setting
         self.ctrl.write("RSRC INT") # set reference to internal, may be obsolete with FREQINT
         self.ctrl.write("ICUR 1MEG") # set to perform current measurement at I*10^6 (Mohm) sensitivity- confirm correct state for SR860
+        
+    def  Scan(self):
+        # Initialize lockin to correct state for scan measurement
+            # Calculate capture length based on scan time, move to params
+                scnTime = 15
+                # Seconds- could make function to convert from minutes
+                scnStart = 0.05
+                scnEnd = -0.05
+                # Voltage- -5.00V < V < 5.00V
+                scnInt = 0
+                # Seconds or msec- 0 = 8ms 
+                tConstant=self.filterdict[lockin.inv_filterdict[int(self.ctrl.query("OFLT?")[:-1])]][1]
+                maxRate = str2num(self.ctrl.query("CAPTURERATEMAX?"))[0]
+                fCuttoff= 5/tConstant
+                # Write function to calculate fCuttoff for low-pass filter based on tConstant
+                maxArray = maxRate/2**np.arange(21)
+        self.ctrl.write("SCNRST") # sets scan regardless of state, resets to begin parameter (SCNENBL may be redundant)
+        self.ctrl.write("SCNPAR REFD") # Set scan parameter to REFDc (reference DC)
+        self.ctrl.write("SCNLOG LIN") # Set scan type to linear
+        self.ctrl.write("SCNEND 0") # Set scan end mode to UP (updown), RE (repeat), ON (once)
+        self.ctrl.write("SCNSEC " + `scnTime`) # Set scan time to x seconds (scnTime)
+        self.ctrl.write("SCNDCATTN 0") # Set dc output attenuator mode to auto 0 or fixed 1
+        self.ctrl.write("SCNDC BEG, " + `scnStart`) 
+        self.ctrl.write("SCNDC END, " + `scnEnd`) # Set beginning (BEG) and end (END) dc reference amplitude to V, where -5.00V < V < 5.00V
+        self.ctrl.write("SCNINRVL " + `scnInt`) # Set parameter update interval 0 <= scnInt <= 16 according to numeric table (manual pg 129)
+        self.ctrl.write("SCNENBL ON") # Set scan parameter to begin value but does not start scan
+
+    def Capture(self):
+        # Initialize lockin to correct state for capture measurement
+            # Capture params - toi JSON file
+            nFactor = np.where(maxArray>fCuttoff)[0][-1]
+            capLength = np.ceil(maxArray[nFactor]*scnTime*8/1000)
+        self.ctrl.write("CAPTURECFG XY") # Set capture configuration to X and Y
+        #lockin.ctrl.write("CAPTURERATEMAX " + `maxRate`) # Set capture configuration to max rate in Hz
+        self.ctrl.write("CAPTURERATE " + `nFactor`) # Set capture rate to maximum rate /2^n for n=0
+        self.ctrl.write("CAPTURELEN " + `capLength`) # Set capture length according to formula in params
        
     def ReadValues(self):
         # Populate properties with values read from instrument
@@ -661,9 +697,9 @@ class lockinZapper(SR830):
         # Set dictionaries of values
         self.gains = dict({0.5: 0.05, 1: 0.1, 1.5: 0.2, 2.0: 0.5, 2.5: 1, 3.0: 2, 3.5: 5, 4.0: 10, 4.5: 20, 5.0: 50, 5.5: 100, 6.0: 200, 6.5: 500})
         
-        self.filterdict = filterdict
+        """self.filterdict = filterdict
         self.filterslopedict = filterslopedict
-        self.sensitivitydict = sensitivitydict
+        self.sensitivitydict = sensitivitydict"""
         
         self.inv_filterdict = {v[0]: k for k, v in self.filterdict.items()}
         self.inv_filterslopedict = {v: k for k, v in self.filterslopedict.items()}
