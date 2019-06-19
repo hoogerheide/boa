@@ -133,13 +133,13 @@ lockin.ctrl.write("CAPTURESTOP")
 
 # Data capture results
 # Unpacking binary data- time start now
-
-lockin.ctrl.write("CAPTUREGET? 0,%i" % capLength)
 t = time.time()-starttime
+lockin.ctrl.write("CAPTUREGET? 0,%i" % capLength)
+
 buf = lockin.ctrl.read_raw()
 hdr = struct.unpack_from('<cc', buf)
 datalength = struct.unpack_from('<' + 'c'*int(hdr[1]), buf, 2)
-#print(hdr, '<%if' % (int("".join(datalength))/4))
+
 data = struct.unpack_from('<%if' % (int("".join(datalength))/4), buf, 2 + int(hdr[1]))
 Y = np.array(data[1::2])
 X = np.array(data[0::2])

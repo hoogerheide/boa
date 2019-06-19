@@ -263,11 +263,9 @@ class SR830(object):
         data = dict()
         data['vals'] = vals
         data['X'] = numpy.empty(vals.size)
-        data['Xerr'] = numpy.zeros(vals.size)
-        # Xerr- array of zeroes for compatibility
+        data['Xerr'] = numpy.empty(vals.size)
         data['Y'] = numpy.empty(vals.size)
-        data['Yerr'] = numpy.zeros(vals.size)
-        # Yerr- array of zeroes for compatibility
+        data['Yerr'] = numpy.empty(vals.size)
         
         for i,val in enumerate(vals):
             self.__setattr__(propertyName, val)
@@ -394,7 +392,7 @@ class SR860(object):
         self.ctrl.write("RSRC INT") # set reference to internal, may be obsolete with FREQINT
         self.ctrl.write("ICUR 1MEG") # set to perform current measurement at I*10^6 (Mohm) sensitivity- confirm correct state for SR860
         
-    def  Scan(self):
+    def Scan(self):
         # Initialize lockin to correct state for scan measurement
             # Calculate capture length based on scan time, move to params
                 scnTime = 15
@@ -589,9 +587,11 @@ class SR860(object):
         data = dict()
         data['vals'] = vals
         data['X'] = numpy.empty(vals.size)
-        data['Xerr'] = numpy.empty(vals.size)
+        data['Xerr'] = numpy.zeros(vals.size)
+        # Xerr- array of zeroes for compatibility
         data['Y'] = numpy.empty(vals.size)
-        data['Yerr'] = numpy.empty(vals.size)
+        data['Yerr'] = numpy.zeros(vals.size)
+        # Yerr- array of zeroes for compatibility
         
         for i,val in enumerate(vals):
             self.__setattr__(propertyName, val)
