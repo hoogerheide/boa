@@ -535,7 +535,7 @@ class SR860(object):
         return str2num(float(self.gains[round(self.ctrl.query("OAUX? " + `auxchannel`)[0]*2)/2]))
         # OAUX 1- change to use DC offset on input, SR860 scan commands (xii) with data capture commmands (xiii) for DC voltage offset
 
-    # Run scan and capture, return X, Y, V    
+    # Function to run scan and capture, unpack and return X, Y, V
     def measureXYV(self):
         # Initialize lockin to correct state for scan measurement
             # Calculate capture length based on scan time, move to params
@@ -563,9 +563,9 @@ class SR860(object):
         self.ctrl.write("SCNENBL ON") # Set scan parameter to begin value but does not start scan
 
         # Initialize lockin to correct state for capture measurement
-            # Capture params - toi JSON file
-            nFactor = np.where(maxArray>fCuttoff)[0][-1]
-            capLength = np.ceil(maxArray[nFactor]*scnTime*8/1000)
+            # Capture params - to JSON file
+                nFactor = np.where(maxArray>fCuttoff)[0][-1]
+                capLength = np.ceil(maxArray[nFactor]*scnTime*8/1000)
         self.ctrl.write("CAPTURECFG XY") # Set capture configuration to X and Y
         self.ctrl.write("CAPTURERATE " + `nFactor`) # Set capture rate to maximum rate /2^n for n=0
         self.ctrl.write("CAPTURELEN " + `capLength`) # Set capture length according to formula in params
@@ -597,8 +597,8 @@ class SR860(object):
         Y=Y[0:idx]
         tStep = scnTime/idx
         vTime = np.arange(0,scnTime,tStep)
-        vStep = np.arange(scnStart,scnEnd,(scnStart-scnEnd)/idx)
-        return (X, Y, vStep)
+        V = np.arange(scnStart,scnEnd,(scnStart-scnEnd)/idx)
+        return (X, Y, V)
         
     def sweep(self, propertyName, vals, equilInterval, numPoints, pointInterval):
         """ Attempt to sweep a given property (e.g. dcVoltage or acAmplitude).
@@ -626,14 +626,14 @@ class SR860(object):
         
         return data
 
-    def collectPointsXY(self, numPoints, pointInterval):
+    def collectPointsXYV(self, numPoints, pointInterval):
         Xs = numpy.empty(numPoints)
         Ys = numpy.empty(numPoints)
         for j in range(numPoints):
-            Xs[j], Ys[j] = self.measureXY()
+            Xs[j], Ys[j], Vs[j] = self.measureXYV()
             time.sleep(pointInterval)
         
-        return numpy.mean(Xs), numpy.mean(Ys), numpy.std(Xs), numpy.std(Ys)
+        return numpy.mean(Xs), numpy.mean(Ys), numpy.mean(Vs), numpy.std(Xs), numpy.std(Ys), numpy.std(Vs)
         
     def collectPointsRTheta(self, numPoints, pointInterval):
         Rs = numpy.empty(numPoints)

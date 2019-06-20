@@ -43,7 +43,6 @@ import glob
 from scipy.optimize import curve_fit
 import json
 from threading import Thread
-
 import harmInstrI_SR860_update as harmInstr
 
 class NumpyAwareJSONEncoder(json.JSONEncoder):
@@ -307,7 +306,7 @@ class WorkerThread(Thread):
         # be proportional to the time constant.
         tfactor = 1/0.03
     
-        Vs = np.arange(params['MinVoltage'], params['MaxVoltage'] + params['StepVoltage'], params['StepVoltage'])
+        Vs = np.arange(params['MinVoltage'], params['MaxVoltage'] + params['TimeVoltage'], params['TimeVoltage'])
         data = dict(time=time.time()-params['startTime'], V=Vs, X=np.empty(Vs.size), Xerr=np.empty(Vs.size), Y=np.empty(Vs.size), Yerr=np.empty(Vs.size))
         
         # set frequency
@@ -404,7 +403,7 @@ class mainFrame(wx.Frame):
         
         lblMinVoltage = wx.StaticText(panel, label="Minimum dc voltage (mV)")
         lblMaxVoltage = wx.StaticText(panel, label="Maximum dc voltage (mV)")
-        lblStepVoltage = wx.StaticText(panel, label="Step dc voltage (mV)")
+        lblTimeVoltage = wx.StaticText(panel, label="Step dc voltage (mV)")
         lbldcInputGain = wx.StaticText(panel, label="dc voltage input gain (mV/V)")
         lblAmplitude = wx.StaticText(panel, label="ac rms Amplitude (mV)")
         lblFrequency = wx.StaticText(panel, label="ac Frequency (Hz)")
@@ -417,7 +416,7 @@ class mainFrame(wx.Frame):
                 
         self.txtMinVoltage = wx.TextCtrl(panel, name="MinVoltage")
         self.txtMaxVoltage = wx.TextCtrl(panel, name="MaxVoltage")
-        self.txtStepVoltage = wx.TextCtrl(panel, name="StepVoltage")
+        self.txtTimeVoltage = wx.TextCtrl(panel, name="TimeVoltage")
         self.txtdcInputGain = wx.TextCtrl(panel, name="dcInputGain")
         self.txtAmplitude = wx.TextCtrl(panel, name="acAmplitude")
         self.txtFrequency = wx.TextCtrl(panel, name="acFrequency")
@@ -440,13 +439,13 @@ class mainFrame(wx.Frame):
         self.btnSetParams = wx.Button(panel, label="Set Parameters on Lockin")
         
         # Define a list of textboxes for easily reading out parameters
-        self.txtboxes = [self.txtMinVoltage, self.txtMaxVoltage, self.txtStepVoltage, self.txtdcInputGain,
+        self.txtboxes = [self.txtMinVoltage, self.txtMaxVoltage, self.txtTimeVoltage, self.txtdcInputGain,
                          self.txtAmplitude, self.txtFrequency, self.txtacInputGain,
                          self.cmblockinFilter, self.cmblockinFilterSlope, self.cmblockinCapSensitivity, self.cmblockinSensitivity, self.cmblockinReserve]
         
         vbox.AddMany([(lblMinVoltage), (self.txtMinVoltage, 1, wx.EXPAND),
                     (lblMaxVoltage), (self.txtMaxVoltage, 1, wx.EXPAND),
-                    (lblStepVoltage), (self.txtStepVoltage, 1, wx.EXPAND),
+                    (lblTimeVoltage), (self.txtTimeVoltage, 1, wx.EXPAND),
                     (lbldcInputGain), (self.txtdcInputGain, 1, wx.EXPAND),
                     (lblAmplitude), (self.txtAmplitude, 1, wx.EXPAND),
                     (lblFrequency), (self.txtFrequency, 1, wx.EXPAND),
