@@ -535,22 +535,35 @@ class SR860(object):
         return str2num(float(self.gains[round(self.ctrl.query("OAUX? " + `auxchannel`)[0]*2)/2]))
         # OAUX 1- change to use DC offset on input, SR860 scan commands (xii) with data capture commmands (xiii) for DC voltage offset
 
+    # measureXY , collectpointsXY functions for compatibility with GUI
+    def measureXY(self):
+        return str2num(self.ctrl.query('SNAP? 1,2'))
+
+    def collectPointsXY(self, numPoints, pointInterval):
+        Xs = numpy.empty(numPoints)
+        Ys = numpy.empty(numPoints)
+        for j in range(numPoints):
+            Xs[j], Ys[j] = self.measureXY()
+            time.sleep(pointInterval)
+        
+        return numpy.mean(Xs), numpy.mean(Ys), numpy.std(Xs), numpy.std(Ys)
+
     # Function to run scan and capture, unpack and return X, Y, V
-    def measureXYV(self):
+    def measureXYV(self,scnStart,scnEnd,scnTime):
         # Initialize lockin to correct state for scan measurement
-            # Calculate capture length based on scan time, move to params
-                scnTime = 15
-                # Seconds- could make function to convert from minutes
-                scnStart = 0.05
-                scnEnd = -0.05
-                # Voltage- -5.00V < V < 5.00V
-                scnInt = 0
-                # Seconds or msec- 0 = 8ms 
-                tConstant=self.filterdict[lockin.inv_filterdict[int(self.ctrl.query("OFLT?")[:-1])]][1]
-                maxRate = str2num(self.ctrl.query("CAPTURERATEMAX?"))[0]
-                fCuttoff= 5/tConstant
-                # Write function to calculate fCuttoff for low-pass filter based on tConstant
-                maxArray = maxRate/2**np.arange(21)
+        # Calculate capture length based on scan time, move to params
+            # scnTime = 15
+            # Seconds- could make function to convert from minutes
+            # scnStart = 0.05
+            # scnEnd = -0.05
+        # Voltage- -5.00V < V < 5.00V
+        scnInt = 0
+        # Seconds or msec- 0 = 8ms 
+        tConstant=self.filterdict[self.inv_filterdict[int(self.ctrl.query("OFLT?")[:-1])]][1]
+        maxRate = str2num(self.ctrl.query("CAPTURERATEMAX?"))[0]
+        fCuttoff= 5/tConstant
+        # Write function to calculate fCuttoff for low-pass filter based on tConstant
+        maxArray = maxRate/2**numpy.arange(21)
         self.ctrl.write("SCNRST") # sets scan regardless of state, resets to begin parameter (SCNENBL may be redundant)
         self.ctrl.write("SCNPAR REFD") # Set scan parameter to REFDc (reference DC)
         self.ctrl.write("SCNLOG LIN") # Set scan type to linear
@@ -563,9 +576,8 @@ class SR860(object):
         self.ctrl.write("SCNENBL ON") # Set scan parameter to begin value but does not start scan
 
         # Initialize lockin to correct state for capture measurement
-            # Capture params - to JSON file
-                nFactor = np.where(maxArray>fCuttoff)[0][-1]
-                capLength = np.ceil(maxArray[nFactor]*scnTime*8/1000)
+        nFactor = numpy.where(maxArray>fCuttoff)[0][-1]
+        capLength = numpy.ceil(maxArray[nFactor]*scnTime*8/1000)
         self.ctrl.write("CAPTURECFG XY") # Set capture configuration to X and Y
         self.ctrl.write("CAPTURERATE " + `nFactor`) # Set capture rate to maximum rate /2^n for n=0
         self.ctrl.write("CAPTURELEN " + `capLength`) # Set capture length according to formula in params
@@ -576,7 +588,7 @@ class SR860(object):
         # Begin data capture get only after SCNSTATE reflects done
         state = 0
         while state < 4:
-            state=str2num(lockin.ctrl.query("SCNSTATE?"))[0]
+            state=str2num(self.ctrl.query("SCNSTATE?"))[0]
 
         # Stop data capture before capture get commands
         self.ctrl.write("CAPTURESTOP")
@@ -589,16 +601,16 @@ class SR860(object):
         hdr = struct.unpack_from('<cc', buf) # Read binary header in little endian format
         datalength = struct.unpack_from('<' + 'c'*int(hdr[1]), buf, 2)
         data = struct.unpack_from('<%if' % (int("".join(datalength))/4), buf, 2 + int(hdr[1]))
-        Y = np.array(data[1::2])
-        X = np.array(data[0::2])
+        Y = numpy.array(data[1::2])
+        X = numpy.array(data[0::2])
         # Chop off trailing data in buffer after stop capture
-        idx = np.where(t>scnTime)[0]
+        idx = numpy.where(t>scnTime)[0]
         X=X[0:idx]
         Y=Y[0:idx]
         tStep = scnTime/idx
-        vTime = np.arange(0,scnTime,tStep)
-        V = np.arange(scnStart,scnEnd,(scnStart-scnEnd)/idx)
-        return (X, Y, V)
+        vTime = numpy.arange(0,scnTime,tStep)
+        V = numpy.arange(scnStart,scnEnd,(scnStart-scnEnd)/idx)
+        return X, Y, V
         
     def sweep(self, propertyName, vals, equilInterval, numPoints, pointInterval):
         """ Attempt to sweep a given property (e.g. dcVoltage or acAmplitude).
@@ -629,6 +641,7 @@ class SR860(object):
     def collectPointsXYV(self, numPoints, pointInterval):
         Xs = numpy.empty(numPoints)
         Ys = numpy.empty(numPoints)
+        Vs = numpy.empty(numPoints)
         for j in range(numPoints):
             Xs[j], Ys[j], Vs[j] = self.measureXYV()
             time.sleep(pointInterval)

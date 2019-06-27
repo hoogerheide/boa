@@ -127,6 +127,35 @@ def analyzeXYData(V, X, Xerr, Y, Yerr):
                         
     return pval, perr, pvalX, pvalY
     
+def AnalyzeXYScanData(V, X, Y):
+    """ Function to produce fit values for X, Y scan data without error bars. Broken out of the mainFrame
+    class so it can be used in a library format.
+    
+    Inputs: V (array of voltages), X (array of X values), Y,
+    Returns: pval (slope, V0) and perr (errors in slope, V0). """
+    # Get starting values without using error bars    
+    p0X, pcovX = np.polyfit(V, X,1, full=False, cov=True)
+    
+    # Calculate estimate of errors from covariance matrix
+    perrX = np.sqrt(np.diag(pcovX))
+
+    # Get starting values without using error bars   
+    pvalY, pcovY = np.polyfit(V, Y, 1, full=False, cov=True)
+
+    # Calculate estimate of errors from covariance matrix
+    perrY = np.sqrt(np.diag(pcovY))
+
+    # Calculate slope and offset from X, Y slopes    
+    pval = np.array([np.sqrt(pvalX[0]**2 + pvalY[0]**2), (pvalX[0]**2*pvalX[1]+pvalY[0]**2*pvalY[1])/(pvalX[0]**2 + pvalY[0]**2)])
+    perr = np.zeros(pval.shape)
+    perr[0] = np.sqrt((2*pvalX[0]/pval[0]*perrX[0])**2+(2*pvalY[0]/pval[0]*perrY[0])**2)
+    perr[1] = np.sqrt((2*pvalX[0]*(pvalX[1]-pval[1])*perrX[0]/(pvalX[0]**2 + pvalY[0]**2))**2+
+                        (2*pvalY[0]*(pvalY[1]-pval[1])*perrY[0]/(pvalX[0]**2 + pvalY[0]**2))**2 +
+                        (pvalX[0]**2*perrX[1]/(pvalX[0]**2 + pvalY[0]**2))**2 +
+                        (pvalY[0]**2*perrY[1]/(pvalX[0]**2 + pvalY[0]**2))**2)
+                        
+    return pval, perr, pvalX, pvalY
+
 """
     WORKER THREAD SECTION
     The worker thread is used to collect data in the background so the gui
@@ -212,8 +241,7 @@ class WorkerThread(Thread):
         """ Defines the tasks for the thread to run in the background of the gui """
         
         # Initialize instruments
-        # TODO: Write a config file that contains all the addresses
-    #       and configuration information for the entire experiment.
+        # TODO: Write a config file that contains all the addresses and configuration information for the entire experiment.
         self.lockin = harmInstr.SR860()
         self.lockin.Initialize()
         self.lockin.Scan()
@@ -340,18 +368,8 @@ class WorkerThread(Thread):
         #time.sleep(1.5*tfactor*tc)        
         
         # Set up sweep/scan, replace block
-        for i,V in enumerate(Vs):
-            self.PostEvent(WorkerStatus("Measuring second harmonic amplitude... Vdc = %0.1f mV..." % V))
-            lockin.dcVoltage = V/params['dcInputGain']
-            time.sleep(0.5*tfactor*tc)
-            data['X'][i], data['Y'][i], data['Xerr'][i], data['Yerr'][i] = lockin.collectPointsXY(5, 3*tc)
-            
-            # convert to real units [A]->[pA]
-            data['X'][i] = data['X'][i]*1e12
-            data['Xerr'][i] = data['Xerr'][i]*1e12
-            data['Y'][i] = data['Y'][i]*1e12
-            data['Yerr'][i] = data['Yerr'][i]*1e12
-
+        self.PostEvent(WorkerStatus("Measuring second harmonic amplitude..."))
+        data['X'],data['Y'],data['V']=lockin.measureXYV(params['MinVoltage'], params['MaxVoltage'], params['TimeVoltage'])
     
         lockin.dcVoltage = 0
         lockin.phase = 0
