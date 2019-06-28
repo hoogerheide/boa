@@ -385,7 +385,7 @@ class SR860(object):
         self.inv_filterslopedict = {v: k for k, v in self.filterslopedict.items()}
         self.inv_sensitivitydict = {v: k for k, v in self.sensitivitydict.items()}
         self.inv_reservedict = {v: k for k, v in self.reservedict.items()}
-        # self.ReadValues()
+        #self.ReadValues()
         
     def Initialize(self):
         # Initialize lockin to correct state for second harmonics measurement
@@ -538,6 +538,9 @@ class SR860(object):
     # measureXY , collectpointsXY functions for compatibility with GUI
     def measureXY(self):
         return str2num(self.ctrl.query('SNAP? 1,2'))
+    
+    def measureRTheta(self):
+        return str2num(self.ctrl.query('SNAP? 3,4'))
 
     def collectPointsXY(self, numPoints, pointInterval):
         Xs = numpy.empty(numPoints)
@@ -552,12 +555,14 @@ class SR860(object):
     def measureXYV(self,scnStart,scnEnd,scnTime):
         # Initialize lockin to correct state for scan measurement
         # Calculate capture length based on scan time, move to params
-        scnTime = 15
         # Voltage- -5.00V < V < 5.00V
+        #print scnTime, type(scnTime)
         scnInt = 0
         # Seconds or msec- 0 = 8ms 
         tConstant=self.filterdict[self.inv_filterdict[int(self.ctrl.query("OFLT?")[:-1])]][1]
+        #print 'tConstant', tConstant
         maxRate = str2num(self.ctrl.query("CAPTURERATEMAX?"))[0]
+        #print 'maxRate', maxRate
         fCuttoff= 5/tConstant
         # Write function to calculate fCuttoff for low-pass filter based on tConstant
         maxArray = maxRate/2**numpy.arange(21)
@@ -574,7 +579,9 @@ class SR860(object):
 
         # Initialize lockin to correct state for capture measurement
         nFactor = numpy.where(maxArray>fCuttoff)[0][-1]
+        #print 'nFactor', nFactor
         capLength = numpy.ceil(maxArray[nFactor]*scnTime*8/1000)
+        #print 'capLength', capLength
         self.ctrl.write("CAPTURECFG XY") # Set capture configuration to X and Y
         self.ctrl.write("CAPTURERATE " + `nFactor`) # Set capture rate to maximum rate /2^n for n=0
         self.ctrl.write("CAPTURELEN " + `capLength`) # Set capture length according to formula in params
@@ -595,18 +602,21 @@ class SR860(object):
         t = time.time()-starttime
         self.ctrl.write("CAPTUREGET? 0,%i" % capLength)
         buf = self.ctrl.read_raw() # Read buffer contents
+        #print len(buf), maxArray[nFactor], scnTime, maxArray[nFactor]*scnTime
         hdr = struct.unpack_from('<cc', buf) # Read binary header in little endian format
         datalength = struct.unpack_from('<' + 'c'*int(hdr[1]), buf, 2)
         data = struct.unpack_from('<%if' % (int("".join(datalength))/4), buf, 2 + int(hdr[1]))
         Y = numpy.array(data[1::2])
         X = numpy.array(data[0::2])
         # Chop off trailing data in buffer after stop capture
-        idx = numpy.where(t>scnTime)[0]
+        #idx = numpy.where(t>scnTime)[0]
+        idx = int(numpy.floor(maxArray[nFactor]*scnTime))
         X=X[0:idx]
         Y=Y[0:idx]
-        tStep = scnTime/idx
-        vTime = numpy.arange(0,scnTime,tStep)
-        V = numpy.arange(scnStart,scnEnd,(scnStart-scnEnd)/idx)
+        #tStep = scnTime/idx
+        #vTime = numpy.arange(0,scnTime,tStep)
+        V = numpy.arange(scnStart,scnEnd,(scnEnd-scnStart)/float(idx))
+        #print "End of collection", X, Y, V
         return X, Y, V
         
     def sweep(self, propertyName, vals, equilInterval, numPoints, pointInterval):
@@ -635,7 +645,7 @@ class SR860(object):
         
         return data
 
-    def collectPointsXYV(self, numPoints, pointInterval):
+    """def collectPointsXYV(self, numPoints, pointInterval):
         Xs = numpy.empty(numPoints)
         Ys = numpy.empty(numPoints)
         Vs = numpy.empty(numPoints)
@@ -643,7 +653,7 @@ class SR860(object):
             Xs[j], Ys[j], Vs[j] = self.measureXYV()
             time.sleep(pointInterval)
         
-        return numpy.mean(Xs), numpy.mean(Ys), numpy.mean(Vs), numpy.std(Xs), numpy.std(Ys), numpy.std(Vs)
+        return numpy.mean(Xs), numpy.mean(Ys), numpy.mean(Vs), numpy.std(Xs), numpy.std(Ys), numpy.std(Vs)"""
         
     def collectPointsRTheta(self, numPoints, pointInterval):
         Rs = numpy.empty(numPoints)

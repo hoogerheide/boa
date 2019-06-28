@@ -38,6 +38,7 @@ import wx
 import wxmplot
 import numpy as np
 import sys
+import os
 import time
 import glob
 from scipy.optimize import curve_fit
@@ -244,8 +245,8 @@ class WorkerThread(Thread):
         # TODO: Write a config file that contains all the addresses and configuration information for the entire experiment.
         self.lockin = harmInstr.SR860()
         self.lockin.Initialize()
-        self.lockin.Scan()
-        self.lockin.Capture()
+        # self.lockin.Scan()
+        # self.lockin.Capture()
         #self.filt = harmInstr.FD9002()
         
         # Initialize data structure
@@ -266,11 +267,12 @@ class WorkerThread(Thread):
             
             # Collect data
             data['data'].append(self.collectCurve())
+            #print data['data'][-1]
 
             # Calculate slope and offset from X,Y data
-            pval, perr, pvalX, pvalY = analyzeXYData(data['data'][-1]['V'],
-                            data['data'][-1]['X'], data['data'][-1]['Xerr'],
-                            data['data'][-1]['Y'], data['data'][-1]['Yerr'])
+            pval, perr, pvalX, pvalY = AnalyzeXYScanData(data['data'][-1]['V'],
+                            data['data'][-1]['X'],
+                            data['data'][-1]['Y'])
                                     
             # Append fit values to pvals array
             pvals = np.append(pvals, [pval], axis=0)
@@ -334,8 +336,8 @@ class WorkerThread(Thread):
         # be proportional to the time constant.
         tfactor = 1/0.03
     
-        Vs = np.arange(params['MinVoltage'], params['MaxVoltage'] + params['TimeVoltage'], params['TimeVoltage'])
-        data = dict(time=time.time()-params['startTime'], V=Vs, X=np.empty(Vs.size), Xerr=np.empty(Vs.size), Y=np.empty(Vs.size), Yerr=np.empty(Vs.size))
+        # Vs = np.arange(params['MinVoltage'], params['MaxVoltage'] + params['TimeVoltage'], params['TimeVoltage'])
+        data = dict(time=time.time()-params['startTime'], V=None, X=None, Xerr=None, Y=None, Yerr=None)
         
         # set frequency
         lockin.frequency = params['acFrequency']
@@ -361,7 +363,7 @@ class WorkerThread(Thread):
         #if lockin.hasOverload():
         #    lockin.ctrl.write("ISRC 2") # if overloading input at highest sensitivity, back down to lower sensitivity
         lockin.harmonic = 2
-        lockin.dcVoltage = Vs[0]/params['dcInputGain']
+        # lockin.dcVoltage = Vs[0]/params['dcInputGain']
         lockin.reserve = params['lockinReserve']
         time.sleep(1.5*tfactor*tc)
         #lockin.autoPhase()
@@ -371,6 +373,9 @@ class WorkerThread(Thread):
         self.PostEvent(WorkerStatus("Measuring second harmonic amplitude..."))
         data['X'],data['Y'],data['V']=lockin.measureXYV(params['MinVoltage'], params['MaxVoltage'], params['TimeVoltage'])
     
+        data['X'] = data['X']*1e12
+        data['Y'] = data['Y']*1e12
+
         lockin.dcVoltage = 0
         lockin.phase = 0
                         
@@ -440,10 +445,10 @@ class mainFrame(wx.Frame):
         self.txtFrequency = wx.TextCtrl(panel, name="acFrequency")
         self.txtacInputGain = wx.TextCtrl(panel, name="acInputGain")
 
-        filterkeys = [k for v,k in sorted([(v[0], k) for k, v in harmInstr.filterdict.items()])]
-        filterslopekeys = [k for v,k in sorted([(v, k) for k, v in harmInstr.filterslopedict.items()])]
-        sensitivitykeys = [k for v,k in sorted([(v, k) for k, v in harmInstr.sensitivitydict.items()])]
-        reservekeys = [k for v,k in sorted([(v, k) for k, v in harmInstr.reservedict.items()])]
+        filterkeys = [k for v,k in sorted([(v[0], k) for k, v in harmInstr.SR860.filterdict.items()])]
+        filterslopekeys = [k for v,k in sorted([(v, k) for k, v in harmInstr.SR860.filterslopedict.items()])]
+        sensitivitykeys = [k for v,k in sorted([(v, k) for k, v in harmInstr.SR860.sensitivitydict.items()])]
+        reservekeys = [k for v,k in sorted([(v, k) for k, v in harmInstr.SR860.reservedict.items()])]
         reservekeys.append('auto')
         
         self.cmblockinFilter = wx.ComboBox(panel, name="lockinFilter", choices=filterkeys)
@@ -600,7 +605,7 @@ class mainFrame(wx.Frame):
         panel.SetSizer(sizer)
 
         # Load in default parameters
-        self.LoadParams(None, filename="defaultI.json")
+        self.LoadParams(None, filename=os.path.split(__file__)[0] +"/defaultI.json")
         
         # Set up event handlers for worker thread
         EVT_RESULT(self,self.evtResult)
