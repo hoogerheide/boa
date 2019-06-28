@@ -552,10 +552,7 @@ class SR860(object):
     def measureXYV(self,scnStart,scnEnd,scnTime):
         # Initialize lockin to correct state for scan measurement
         # Calculate capture length based on scan time, move to params
-            # scnTime = 15
-            # Seconds- could make function to convert from minutes
-            # scnStart = 0.05
-            # scnEnd = -0.05
+        scnTime = 15
         # Voltage- -5.00V < V < 5.00V
         scnInt = 0
         # Seconds or msec- 0 = 8ms 

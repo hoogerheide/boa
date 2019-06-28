@@ -134,7 +134,7 @@ def AnalyzeXYScanData(V, X, Y):
     Inputs: V (array of voltages), X (array of X values), Y,
     Returns: pval (slope, V0) and perr (errors in slope, V0). """
     # Get starting values without using error bars    
-    p0X, pcovX = np.polyfit(V, X,1, full=False, cov=True)
+    pvalX, pcovX = np.polyfit(V, X,1, full=False, cov=True)
     
     # Calculate estimate of errors from covariance matrix
     perrX = np.sqrt(np.diag(pcovX))
