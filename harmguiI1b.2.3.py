@@ -136,12 +136,16 @@ def AnalyzeXYScanData(V, X, Y):
     Returns: pval (slope, V0) and perr (errors in slope, V0). """
     # Get starting values without using error bars    
     pvalX, pcovX = np.polyfit(V, X,1, full=False, cov=True)
+    # Temporary fix (incorrect error correction) DH 7/1/2019
+    pvalX[1] = -pvalX[1]/pvalX[0]
     
     # Calculate estimate of errors from covariance matrix
     perrX = np.sqrt(np.diag(pcovX))
 
     # Get starting values without using error bars   
     pvalY, pcovY = np.polyfit(V, Y, 1, full=False, cov=True)
+    # Temporary fix (incorrect error correction) DH 7/1/2019
+    pvalY[1] = -pvalY[1]/pvalY[0]
 
     # Calculate estimate of errors from covariance matrix
     perrY = np.sqrt(np.diag(pcovY))
