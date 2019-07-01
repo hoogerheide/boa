@@ -537,10 +537,10 @@ class SR860(object):
 
     # measureXY , collectpointsXY functions for compatibility with GUI
     def measureXY(self):
-        return str2num(self.ctrl.query('SNAP? 1,2'))
+        return str2num(self.ctrl.query('SNAP? 0,1'))
     
     def measureRTheta(self):
-        return str2num(self.ctrl.query('SNAP? 3,4'))
+        return str2num(self.ctrl.query('SNAP? 2,3'))
 
     def collectPointsXY(self, numPoints, pointInterval):
         Xs = numpy.empty(numPoints)
