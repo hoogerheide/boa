@@ -568,8 +568,10 @@ class SR860(object):
         self.ctrl.write("SCNEND 0") # Set scan end mode to UP (updown), RE (repeat), ON (once)
         self.ctrl.write("SCNSEC " + `scnTime`) # Set scan time to x seconds (scnTime)
         self.ctrl.write("SCNDCATTN 0") # Set dc output attenuator mode to auto 0 or fixed 1
-        self.ctrl.write("SCNDC BEG, " + `scnStart`) 
-        self.ctrl.write("SCNDC END, " + `scnEnd`) # Set beginning (BEG) and end (END) dc reference amplitude to V, where -5.00V < V < 5.00V
+        self.ctrl.write("SCNDC BEG, " + `scnStart` + " MV") 
+        self.ctrl.write("SCNDC END, " + `scnEnd` + " MV") # Set beginning (BEG) and end (END) dc reference amplitude to V, where -5.00V < V < 5.00V
+        #print "SCNDC END, " + `scnEnd` + " MV"
+        #time.sleep(1)
         self.ctrl.write("SCNINRVL " + `scnInt`) # Set parameter update interval 0 <= scnInt <= 16 according to numeric table (manual pg 129)
         self.ctrl.write("SCNENBL ON") # Set scan parameter to begin value but does not start scan
         time.sleep(5*tConstant)
