@@ -572,7 +572,7 @@ class SR860(object):
         self.ctrl.write("SCNDC END, " + `scnEnd`) # Set beginning (BEG) and end (END) dc reference amplitude to V, where -5.00V < V < 5.00V
         self.ctrl.write("SCNINRVL " + `scnInt`) # Set parameter update interval 0 <= scnInt <= 16 according to numeric table (manual pg 129)
         self.ctrl.write("SCNENBL ON") # Set scan parameter to begin value but does not start scan
-
+        time.sleep(5*tConstant)
         # Initialize lockin to correct state for capture measurement
         nFactor = numpy.where(maxArray>fCuttoff)[0][-1]
         #print 'nFactor', nFactor
