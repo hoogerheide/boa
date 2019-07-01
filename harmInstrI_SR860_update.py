@@ -385,7 +385,7 @@ class SR860(object):
         self.inv_filterslopedict = {v: k for k, v in self.filterslopedict.items()}
         self.inv_sensitivitydict = {v: k for k, v in self.sensitivitydict.items()}
         self.inv_reservedict = {v: k for k, v in self.reservedict.items()}
-        #self.ReadValues()
+        self.ReadValues()
         
     def Initialize(self):
         # Initialize lockin to correct state for second harmonics measurement
@@ -401,13 +401,9 @@ class SR860(object):
         self._sensitivity = self.inv_sensitivitydict[int(self.ctrl.query("SCAL?")[:-1])]
         # self._reserve = self.inv_reservedict[int(self.ctrl.query("RMOD?")[:-1])] - no dynamic reserve setting on SR860
         self._frequency = str2num(self.ctrl.query("FREQINT?"))[0]
-        # alternatively- str2num(self._frequency) - FREQINT
         self._amplitude = str2num(self.ctrl.query("SLVL?"))[0]
-        # alternatively- str2num(self._amplitude) 
         self._harmonic = str2num(self.ctrl.query("HARM?"))[0]
-        # alternatively- str2num(self._harmonic)
         self._dcVoltage = str2num(self.ctrl.query("AUXV? 0"))[0]
-        # alternatively- str2num(self.dcVoltage)
      
     def close(self):
         """ closes the VISA instance (I think) """
