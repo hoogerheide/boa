@@ -403,7 +403,7 @@ class SR860(object):
         self._frequency = str2num(self.ctrl.query("FREQINT?"))[0]
         self._amplitude = str2num(self.ctrl.query("SLVL?"))[0]
         self._harmonic = str2num(self.ctrl.query("HARM?"))[0]
-        self._dcVoltage = str2num(self.ctrl.query("AUXV? 0"))[0]
+        self._dcVoltage = str2num(self.ctrl.query("SOFF?"))[0]
      
     def close(self):
         """ closes the VISA instance (I think) """
@@ -500,7 +500,7 @@ class SR860(object):
     def dcVoltage(self, value):
         # TODO: can't be greater than +/-10.5 V. Check for this.
         self._dcVoltage = value
-        self.ctrl.write("AUXV 0, " + `value`) # Check AUXV 0 address for SR860
+        self.ctrl.write("SOFF " + `value`) # DC output
 
     @property
     def phase(self):
