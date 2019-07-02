@@ -391,8 +391,8 @@ class SR860(object):
         # Initialize lockin to correct state for second harmonics measurement
         self.ctrl.write("RTRG SIN") # set reference to "SINE"- double check correct command, it may be default setting
         self.ctrl.write("RSRC INT") # set reference to internal, may be obsolete with FREQINT
-        self.ctrl.write("ICUR 1MEG") # set to perform current measurement at I*10^6 (Mohm) sensitivity- confirm correct state for SR860
-       
+        self.ctrl.write("ICUR 1MEG") # set to perform current measurement at 1*10^6 (Mohm) sensitivity- confirm correct state for SR860
+
     def ReadValues(self):
         # Populate properties with values read from instrument
         # Update: .ask replaced with .query, str2num function to format output
@@ -501,6 +501,7 @@ class SR860(object):
         # TODO: can't be greater than +/-10.5 V. Check for this.
         self._dcVoltage = value
         self.ctrl.write("SOFF " + `value`) # DC output
+        #print "SOFF " + `value`
 
     @property
     def phase(self):
@@ -561,11 +562,11 @@ class SR860(object):
         #print 'maxRate', maxRate
         fCuttoff= 5/tConstant
         # Write function to calculate fCuttoff for low-pass filter based on tConstant
-        maxArray = maxRate/2**numpy.arange(21)
+        maxArray = maxRate/(2**numpy.arange(21))
         self.ctrl.write("SCNRST") # sets scan regardless of state, resets to begin parameter (SCNENBL may be redundant)
         self.ctrl.write("SCNPAR REFD") # Set scan parameter to REFDc (reference DC)
         self.ctrl.write("SCNLOG LIN") # Set scan type to linear
-        self.ctrl.write("SCNEND 0") # Set scan end mode to UP (updown), RE (repeat), ON (once)
+        self.ctrl.write("SCNEND 0") # Set scan end mode to 2 (updown), 1 (repeat), 0 (once)
         self.ctrl.write("SCNSEC " + `scnTime`) # Set scan time to x seconds (scnTime)
         self.ctrl.write("SCNDCATTN 0") # Set dc output attenuator mode to auto 0 or fixed 1
         self.ctrl.write("SCNDC BEG, " + `scnStart` + " MV") 
@@ -577,9 +578,7 @@ class SR860(object):
         time.sleep(5*tConstant)
         # Initialize lockin to correct state for capture measurement
         nFactor = numpy.where(maxArray>fCuttoff)[0][-1]
-        #print 'nFactor', nFactor
-        capLength = numpy.ceil(maxArray[nFactor]*scnTime*8/1000)
-        #print 'capLength', capLength
+        capLength = int(numpy.ceil(maxArray[nFactor]*1*scnTime*8/1000))
         self.ctrl.write("CAPTURECFG XY") # Set capture configuration to X and Y
         self.ctrl.write("CAPTURERATE " + `nFactor`) # Set capture rate to maximum rate /2^n for n=0
         self.ctrl.write("CAPTURELEN " + `capLength`) # Set capture length according to formula in params
@@ -592,14 +591,17 @@ class SR860(object):
         while state < 4:
             state=str2num(self.ctrl.query("SCNSTATE?"))[0]
 
+        #time.sleep(scnTime*1)
+
         # Stop data capture before capture get commands
         self.ctrl.write("CAPTURESTOP")
-
+        
         # Data capture results
         # Unpacking binary data- time start now
         t = time.time()-starttime
         self.ctrl.write("CAPTUREGET? 0,%i" % capLength)
         buf = self.ctrl.read_raw() # Read buffer contents
+    
         #print len(buf), maxArray[nFactor], scnTime, maxArray[nFactor]*scnTime
         hdr = struct.unpack_from('<cc', buf) # Read binary header in little endian format
         datalength = struct.unpack_from('<' + 'c'*int(hdr[1]), buf, 2)
@@ -608,13 +610,14 @@ class SR860(object):
         X = numpy.array(data[0::2])
         # Chop off trailing data in buffer after stop capture
         #idx = numpy.where(t>scnTime)[0]
-        idx = int(numpy.floor(maxArray[nFactor]*scnTime))
+        idx = int(numpy.floor(maxArray[nFactor]*1*scnTime))
         X=X[0:idx]
         Y=Y[0:idx]
         #tStep = scnTime/idx
         #vTime = numpy.arange(0,scnTime,tStep)
         V = numpy.arange(scnStart,scnEnd,(scnEnd-scnStart)/float(idx))
         #print "End of collection", X, Y, V
+        self.ctrl.write("SCNENBL OFF")
         return X, Y, V
         
     def sweep(self, propertyName, vals, equilInterval, numPoints, pointInterval):

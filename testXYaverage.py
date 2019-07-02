@@ -49,6 +49,7 @@ if 1:
     """ Final piece: figure out how to use Jacobian for transformation """
     J = mb2V0_jac(*p0)
     V0_err = np.sqrt(np.dot(J, np.dot(pcov0, J.T)))
+    # Error bar for V0
 
     #show that in this case root sum of squares is equal to relative error on V0
     print np.sqrt(np.sum((np.sqrt(np.diag(pcov0))/p0)**2))

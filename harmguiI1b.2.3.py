@@ -328,7 +328,7 @@ class WorkerThread(Thread):
         # set lockin filter settings
         lockin.filter = params['lockinFilter']
         lockin.filterslope = params['lockinFilterSlope']
-        lockin.ctrl.write("ISRC 2") # set to perform current measurement with I*10^6 sensitivity
+        #lockin.ctrl.write("ISRC 2") # set to perform current measurement with I*10^6 sensitivity
         lockin.sensitivity = params['lockinCapSensitivity']
         lockin.amplitude = params['acAmplitude']/params['acInputGain']
 
@@ -375,10 +375,12 @@ class WorkerThread(Thread):
         
         # Set up sweep/scan, replace block
         self.PostEvent(WorkerStatus("Measuring second harmonic amplitude..."))
-        data['X'],data['Y'],data['V']=lockin.measureXYV(params['MinVoltage'], params['MaxVoltage'], params['TimeVoltage'])
+        X1, Y1, V1=lockin.measureXYV(params['MinVoltage'], params['MaxVoltage'], params['TimeVoltage'])
+        X2, Y2, V2=lockin.measureXYV(params['MaxVoltage'], params['MinVoltage'], params['TimeVoltage'])
     
-        data['X'] = data['X']*1e12
-        data['Y'] = data['Y']*1e12
+        data['X'] = np.hstack((X1, X2))*1e12
+        data['Y'] = np.hstack((Y1, Y2))*1e12
+        data['V'] = np.hstack((V1, V2))
 
         lockin.dcVoltage = 0
         lockin.phase = 0
