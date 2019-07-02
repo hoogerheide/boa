@@ -127,7 +127,17 @@ def analyzeXYData(V, X, Xerr, Y, Yerr):
                         (pvalY[0]**2*perrY[1]/(pvalX[0]**2 + pvalY[0]**2))**2)
                         
     return pval, perr, pvalX, pvalY
-    
+
+def mb2V0(m,b):
+    """ Returns V0 = -b/m from slope m and intercept b """
+
+    return -b/m
+
+def mb2V0_jac(m,b):
+    """ Jacobian of mb2V0 """
+
+    return np.array([b/m**2, -1/m])
+
 def AnalyzeXYScanData(V, X, Y):
     """ Function to produce fit values for X, Y scan data without error bars. Broken out of the mainFrame
     class so it can be used in a library format.
@@ -135,20 +145,25 @@ def AnalyzeXYScanData(V, X, Y):
     Inputs: V (array of voltages), X (array of X values), Y,
     Returns: pval (slope, V0) and perr (errors in slope, V0). """
     # Get starting values without using error bars    
-    pvalX, pcovX = np.polyfit(V, X,1, full=False, cov=True)
+    p0X, pcovX = np.polyfit(V, X,1, full=False, cov=True)
     # Temporary fix (incorrect error correction) DH 7/1/2019
-    pvalX[1] = -pvalX[1]/pvalX[0]
+    pvalX = np.array([p0X[0], mb2V0(*p0X)])
+
     
     # Calculate estimate of errors from covariance matrix
     perrX = np.sqrt(np.diag(pcovX))
+    JX = mb2V0_jac(*p0X)
+    perrX[1] = np.sqrt(np.dot(JX, np.dot(pcovX, JX.T)))
 
     # Get starting values without using error bars   
-    pvalY, pcovY = np.polyfit(V, Y, 1, full=False, cov=True)
+    p0Y, pcovY = np.polyfit(V, Y, 1, full=False, cov=True)
     # Temporary fix (incorrect error correction) DH 7/1/2019
-    pvalY[1] = -pvalY[1]/pvalY[0]
+    pvalY = np.array([p0Y[0], mb2V0(*p0Y)])
 
     # Calculate estimate of errors from covariance matrix
     perrY = np.sqrt(np.diag(pcovY))
+    JY = mb2V0_jac(*p0Y)
+    perrY[1] = np.sqrt(np.dot(JY, np.dot(pcovY, JY.T)))
 
     # Calculate slope and offset from X, Y slopes    
     pval = np.array([np.sqrt(pvalX[0]**2 + pvalY[0]**2), (pvalX[0]**2*pvalX[1]+pvalY[0]**2*pvalY[1])/(pvalX[0]**2 + pvalY[0]**2)])
