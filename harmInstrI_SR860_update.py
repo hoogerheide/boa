@@ -560,7 +560,7 @@ class SR860(object):
         #print 'tConstant', tConstant
         maxRate = str2num(self.ctrl.query("CAPTURERATEMAX?"))[0]
         #print 'maxRate', maxRate
-        fCuttoff= 5/tConstant
+        fCuttoff= 2/tConstant
         # Write function to calculate fCuttoff for low-pass filter based on tConstant
         maxArray = maxRate/(2**numpy.arange(21))
         self.ctrl.write("SCNRST") # sets scan regardless of state, resets to begin parameter (SCNENBL may be redundant)
@@ -575,7 +575,7 @@ class SR860(object):
         #time.sleep(1)
         self.ctrl.write("SCNINRVL " + `scnInt`) # Set parameter update interval 0 <= scnInt <= 16 according to numeric table (manual pg 129)
         self.ctrl.write("SCNENBL ON") # Set scan parameter to begin value but does not start scan
-        time.sleep(5*tConstant)
+        time.sleep(30*tConstant)
         # Initialize lockin to correct state for capture measurement
         nFactor = numpy.where(maxArray>fCuttoff)[0][-1]
         capLength = int(numpy.ceil(maxArray[nFactor]*1*scnTime*8/1000))
@@ -599,13 +599,29 @@ class SR860(object):
         # Data capture results
         # Unpacking binary data- time start now
         t = time.time()-starttime
-        self.ctrl.write("CAPTUREGET? 0,%i" % capLength)
-        buf = self.ctrl.read_raw() # Read buffer contents
-    
-        #print len(buf), maxArray[nFactor], scnTime, maxArray[nFactor]*scnTime
-        hdr = struct.unpack_from('<cc', buf) # Read binary header in little endian format
-        datalength = struct.unpack_from('<' + 'c'*int(hdr[1]), buf, 2)
-        data = struct.unpack_from('<%if' % (int("".join(datalength))/4), buf, 2 + int(hdr[1]))
+        capLengthAvail = str2num(self.ctrl.query("CAPTUREBYTES?"))[0]/1024 # 1024 bytes/block of data 
+
+        getLength = min(int(numpy.ceil(capLengthAvail)), capLength)
+        #print capLengthAvail, capLength, getLength
+        getRange = range(0,getLength,64)
+#        getRange.append(getLength+1)
+        data = []
+        for start in getRange:
+            cmd = "CAPTUREGET? %i,%i" % (int(start), min(64, getLength))
+            getLength -= 64
+            #print cmd
+            self.ctrl.write(cmd)
+            buf = self.ctrl.read_raw() # Read buffer contents
+        
+            #print len(buf), maxArray[nFactor], scnTime, maxArray[nFactor]*scnTime
+            hdr = struct.unpack_from('<cc', buf) # Read binary header in little endian format
+            datalength = struct.unpack_from('<' + 'c'*int(hdr[1]), buf, 2)
+            #print datalength
+            data = data + list(struct.unpack_from('<%if' % (int("".join(datalength))/4), buf, 2 + int(hdr[1])))
+            #alldata = alldata + data
+            #print alldata[0:10], alldata[-10:], len(data), len(alldata)
+
+        # data = alldata
         Y = numpy.array(data[1::2])
         X = numpy.array(data[0::2])
         # Chop off trailing data in buffer after stop capture
@@ -616,7 +632,8 @@ class SR860(object):
         #tStep = scnTime/idx
         #vTime = numpy.arange(0,scnTime,tStep)
         V = numpy.arange(scnStart,scnEnd,(scnEnd-scnStart)/float(idx))
-        #print "End of collection", X, Y, V
+        #print "End of collection", idx, len(X*Y*V)
+        self.dcVoltage = scnEnd/1000.
         self.ctrl.write("SCNENBL OFF")
         return X, Y, V
         

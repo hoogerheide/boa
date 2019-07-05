@@ -396,7 +396,7 @@ class WorkerThread(Thread):
         data['X'] = np.hstack((X1, X2))*1e12
         data['Y'] = np.hstack((Y1, Y2))*1e12
         data['V'] = np.hstack((V1, V2))
-
+        
         lockin.dcVoltage = 0
         lockin.phase = 0
                         
@@ -427,7 +427,7 @@ class mainFrame(wx.Frame):
     
     def __init__(self, parent, title):
         """ Initialize window appearance """
-        wx.Frame.__init__(self, parent, title=title, size=(1500,1000))
+        wx.Frame.__init__(self, parent, title=title, size=(1500,1120))
 
         # Bind to event handler for closing main window
         self.Bind(wx.EVT_CLOSE, self.evtClose)
@@ -447,7 +447,7 @@ class mainFrame(wx.Frame):
         
         lblMinVoltage = wx.StaticText(panel, label="Minimum dc voltage (mV)")
         lblMaxVoltage = wx.StaticText(panel, label="Maximum dc voltage (mV)")
-        lblTimeVoltage = wx.StaticText(panel, label="Step dc voltage (mV)")
+        lblTimeVoltage = wx.StaticText(panel, label="Scan time (s)")
         lbldcInputGain = wx.StaticText(panel, label="dc voltage input gain (mV/V)")
         lblAmplitude = wx.StaticText(panel, label="ac rms Amplitude (mV)")
         lblFrequency = wx.StaticText(panel, label="ac Frequency (Hz)")
