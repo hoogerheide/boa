@@ -397,6 +397,7 @@ class SR860(object):
         # Populate properties with values read from instrument
         # Update: .ask replaced with .query, str2num function to format output
         self._filter = self.inv_filterdict[int(self.ctrl.query("OFLT?")[:-1])]
+        #print self.inv_filterslopedict[int(self.ctrl.query("OFSL?")[:-1])]
         self._filterslope = self.inv_filterslopedict[int(self.ctrl.query("OFSL?")[:-1])]
         self._sensitivity = self.inv_sensitivitydict[int(self.ctrl.query("SCAL?")[:-1])]
         # self._reserve = self.inv_reservedict[int(self.ctrl.query("RMOD?")[:-1])] - no dynamic reserve setting on SR860
@@ -568,14 +569,14 @@ class SR860(object):
         self.ctrl.write("SCNLOG LIN") # Set scan type to linear
         self.ctrl.write("SCNEND 0") # Set scan end mode to 2 (updown), 1 (repeat), 0 (once)
         self.ctrl.write("SCNSEC " + `scnTime`) # Set scan time to x seconds (scnTime)
-        self.ctrl.write("SCNDCATTN 0") # Set dc output attenuator mode to auto 0 or fixed 1
+        self.ctrl.write("SCNDCATTN 1") # 7/05/19 Set dc output attenuator mode to auto 0 or fixed 1
         self.ctrl.write("SCNDC BEG, " + `scnStart` + " MV") 
         self.ctrl.write("SCNDC END, " + `scnEnd` + " MV") # Set beginning (BEG) and end (END) dc reference amplitude to V, where -5.00V < V < 5.00V
         #print "SCNDC END, " + `scnEnd` + " MV"
         #time.sleep(1)
         self.ctrl.write("SCNINRVL " + `scnInt`) # Set parameter update interval 0 <= scnInt <= 16 according to numeric table (manual pg 129)
         self.ctrl.write("SCNENBL ON") # Set scan parameter to begin value but does not start scan
-        time.sleep(30*tConstant)
+        time.sleep(10*tConstant)
         # Initialize lockin to correct state for capture measurement
         nFactor = numpy.where(maxArray>fCuttoff)[0][-1]
         capLength = int(numpy.ceil(maxArray[nFactor]*1*scnTime*8/1000))

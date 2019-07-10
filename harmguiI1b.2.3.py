@@ -45,6 +45,7 @@ from scipy.optimize import curve_fit
 import json
 from threading import Thread
 import harmInstrI_SR860_update as harmInstr
+import membraneprep
 
 class NumpyAwareJSONEncoder(json.JSONEncoder):
     """ Utility to write numpy array objects to JSON file. """
@@ -390,12 +391,13 @@ class WorkerThread(Thread):
         
         # Set up sweep/scan, replace block
         self.PostEvent(WorkerStatus("Measuring second harmonic amplitude..."))
-        X1, Y1, V1=lockin.measureXYV(params['MinVoltage'], params['MaxVoltage'], params['TimeVoltage'])
-        X2, Y2, V2=lockin.measureXYV(params['MaxVoltage'], params['MinVoltage'], params['TimeVoltage'])
-    
-        data['X'] = np.hstack((X1, X2))*1e12
-        data['Y'] = np.hstack((Y1, Y2))*1e12
-        data['V'] = np.hstack((V1, V2))
+        X1, Y1, V1=lockin.measureXYV(0, params['MinVoltage'], params['TimeVoltage']/2)
+        X2, Y2, V2=lockin.measureXYV(params['MinVoltage'], params['MaxVoltage'], params['TimeVoltage'])
+        X3, Y3, V3=lockin.measureXYV(params['MaxVoltage'], 0, params['TimeVoltage']/2)
+        
+        data['X'] = np.hstack((X1, X2, X3))*1e12
+        data['Y'] = np.hstack((Y1, Y2, Y3))*1e12
+        data['V'] = np.hstack((V1, V2, V3))
         
         lockin.dcVoltage = 0
         lockin.phase = 0
@@ -549,11 +551,15 @@ class mainFrame(wx.Frame):
         self.btnZap.Bind(wx.EVT_BUTTON, self.evtPushZap)
         self.btnZap.SetBackgroundColor = "RED"
         self.btnZap.SetForegroundColor = "WHITE"
+
+        self.btnPrep = wx.Button(panel, label="Prep")
+        self.btnPrep.Bind(wx.EVT_BUTTON, self.evtPushPrep)
         
         btnbox.Add(self.btnStart, 1, flag=wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT|wx.BOTTOM, border=5)
         btnbox.Add(self.btnStop, 1, flag=wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT|wx.BOTTOM, border=5)
         btnbox.Add(self.btnQuit, 1, flag=wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT|wx.BOTTOM, border=5)
         btnbox.Add(self.btnZap, 1, flag=wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT|wx.BOTTOM, border=5)
+        btnbox.Add(self.btnPrep, 1, flag=wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT|wx.BOTTOM, border=5)
         
         sizer.Add(btnbox, pos=(3,0), span=(1,1), flag=wx.EXPAND)
         
@@ -795,6 +801,14 @@ class mainFrame(wx.Frame):
         lockin.dcVoltage = 2
         time.sleep(0.01)
         lockin.dcVoltage = initV
+        lockin.close()
+
+    def evtPushPrep(self, event):
+        """ Event handler for "Prep" button. Runs membrane prep script to set harmonic 
+            to 1, lockin sensitivity to 100mV/nA for optimal membrane formation conditions. """
+        lockin = harmInstr.SR860()
+        lockin.sensitivity = "100 mV/nA"
+        lockin.harmonic = 1
         lockin.close()
     
     def evtClose(self, event):
