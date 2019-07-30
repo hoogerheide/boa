@@ -33,6 +33,7 @@
     Requires files: harmInstrI.py (instrument library)
                     defaultI.json (default parameters)
 """
+""" TODO: fix edit tag button, transition away from obsolete lockin reserve  commmand, distinguish up/down curves on plot """
 
 import wx
 import wxmplot
