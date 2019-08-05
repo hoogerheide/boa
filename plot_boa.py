@@ -9,7 +9,7 @@ plt.rcParams['pdf.fonttype'] = 42
 plt.rcParams['font.size'] = 16
 plt.rcParams['lines.linewidth'] = 1.5
 
-fn = '20190717_001.txt'
+fn = 'DOPCDOPS/20190726_008.txt'
 
 d = np.loadtxt(fn)
 
