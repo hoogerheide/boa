@@ -46,7 +46,7 @@ from scipy.optimize import curve_fit
 import json
 from threading import Thread
 import harmInstrI_SR860_update as harmInstr
-import membraneprep
+#import membraneprep
 
 class NumpyAwareJSONEncoder(json.JSONEncoder):
     """ Utility to write numpy array objects to JSON file. """
@@ -1056,6 +1056,6 @@ class mainFrame(wx.Frame):
 # Run the app in such a way that file can be used as library
 if __name__ == '__main__':
     app = wx.App()
-    frame = mainFrame(None, "Second harmonic analysis")
+    frame = mainFrame(None, "Bilayer overtone analysis")
     app.MainLoop()
 

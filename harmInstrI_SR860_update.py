@@ -138,7 +138,7 @@ class SR830(object):
             self._filter = key
             self.ctrl.write("OFLT %i" % self.filterdict[key][0])
         else:
-            print "Warning: filter setting %s not valid" % key
+            print("Warning: filter setting %s not valid" % key)
             
     @property
     def filterslope(self):
@@ -150,7 +150,7 @@ class SR830(object):
             self._filterslope = key
             self.ctrl.write("OFSL %i" % self.filterslopedict[key])
         else:
-            print "Warning: filter slope setting %s not valid" % key
+            print("Warning: filter slope setting %s not valid" % key)
             
     @property
     def reserve(self):
@@ -164,7 +164,7 @@ class SR830(object):
         elif key == 'auto':
             self.autoReserve()
         else:
-            print "Warning: reserve setting %s not valid" % key            
+            print("Warning: reserve setting %s not valid" % key)
             
     @property
     def sensitivity(self):
@@ -176,7 +176,7 @@ class SR830(object):
             self._sensitivity = key
             self.ctrl.write("SENS %i" % self.sensitivitydict[key])
         else:
-            print "Warning: sensitivity setting %s not valid" % key
+            print("Warning: sensitivity setting %s not valid" % key)
                 
     @property
     def frequency(self):
@@ -185,7 +185,7 @@ class SR830(object):
     @frequency.setter
     def frequency(self, value):
         self._frequency = value        
-        self.ctrl.write("FREQ " + `value`)
+        self.ctrl.write("FREQ %G" % value)
     
     @property
     def amplitude(self):
@@ -194,11 +194,11 @@ class SR830(object):
     @amplitude.setter
     def amplitude(self, value):
         if value > 5.:
-            print "Warning: Lock-in amplitude cannot be greater than 5 V. Reducing to 5 V."
+            print("Warning: Lock-in amplitude cannot be greater than 5 V. Reducing to 5 V.")
             value = 5.
             
         self._amplitude = value
-        self.ctrl.write("SLVL " + `value`)
+        self.ctrl.write("SLVL %G" % value)
     
     @property
     def harmonic(self):
@@ -207,7 +207,7 @@ class SR830(object):
     @harmonic.setter
     def harmonic(self, value):
         self._harmonic = value
-        self.ctrl.write("HARM " + `value`)
+        self.ctrl.write("HARM %i" % value)
     
     @property
     def dcVoltage(self):
@@ -217,7 +217,7 @@ class SR830(object):
     def dcVoltage(self, value):
         # TODO: can't be greater than +/-10.5 V. Check for this.
         self._dcVoltage = value
-        self.ctrl.write("AUXV 1, " + `value`)
+        self.ctrl.write("AUXV 1, %G" % value)
         
     @property
     def phase(self):
@@ -227,7 +227,7 @@ class SR830(object):
     def phase(self, value):
         # TODO: can't be greater than +730/-360. Check for this.
         self._phase = value
-        self.ctrl.write("PHAS " + `value`)
+        self.ctrl.write("PHAS %G" % value)
         
     def getPhase(self):
         return str2num(self.ctrl.query("PHAS?")[0])
@@ -245,7 +245,7 @@ class SR830(object):
     def gain(self, auxchannel=1):
         # not used with current measurement
         pass
-        return str2num(float(self.gains[round(self.ctrl.query("OAUX? " + `auxchannel`)[0]*2)/2]))
+        return str2num(float(self.gains[round(self.ctrl.query("OAUX? %i" % auxchannel)[0]*2)/2]))
 
     def measureRTheta(self):
         return str2num(self.ctrl.query('SNAP? 3,4'))
@@ -420,7 +420,7 @@ class SR860(object):
             self._filter = key
             self.ctrl.write("OFLT %i" % self.filterdict[key][0])
         else:
-            print "Warning: filter setting %s not valid" % key
+            print("Warning: filter setting %s not valid" % key)
             
     @property
     def filterslope(self):
@@ -432,7 +432,7 @@ class SR860(object):
             self._filterslope = key
             self.ctrl.write("OFSL %i" % self.filterslopedict[key])
         else:
-            print "Warning: filter slope setting %s not valid" % key
+            print("Warning: filter slope setting %s not valid" % key)
             
     """ @property
     def reserve(self):
@@ -459,7 +459,7 @@ class SR860(object):
             self._sensitivity = key
             self.ctrl.write("SCAL %i" % self.sensitivitydict[key])
         else:
-            print "Warning: sensitivity setting %s not valid" % key
+            print("Warning: sensitivity setting %s not valid" % key)
                 
     @property
     def frequency(self):
@@ -468,7 +468,7 @@ class SR860(object):
     @frequency.setter
     def frequency(self, value):
         self._frequency = value        
-        self.ctrl.write("FREQ " + `value`)
+        self.ctrl.write("FREQ %G" % value)
     
     @property
     def amplitude(self):
@@ -477,11 +477,11 @@ class SR860(object):
     @amplitude.setter
     def amplitude(self, value):
         if value > 5.:
-            print "Warning: Lock-in amplitude cannot be greater than 5 V. Reducing to 5 V."
+            print("Warning: Lock-in amplitude cannot be greater than 5 V. Reducing to 5 V.")
             value = 5.
             
         self._amplitude = value
-        self.ctrl.write("SLVL " + `value`)
+        self.ctrl.write("SLVL %f" % value)
     
     @property
     def harmonic(self):
@@ -490,7 +490,7 @@ class SR860(object):
     @harmonic.setter
     def harmonic(self, value):
         self._harmonic = value
-        self.ctrl.write("HARM " + `value`)
+        self.ctrl.write("HARM %i" % value)
     
     @property
     def dcVoltage(self):
@@ -501,7 +501,7 @@ class SR860(object):
     def dcVoltage(self, value):
         # TODO: can't be greater than +/-10.5 V. Check for this.
         self._dcVoltage = value
-        self.ctrl.write("SOFF " + `value`) # DC output
+        self.ctrl.write("SOFF %f" % value) # DC output
         #print "SOFF " + `value`
 
     @property
@@ -512,7 +512,7 @@ class SR860(object):
     def phase(self, value):
         # TODO: can't be greater than +730/-360. Check for this.
         self._phase = value
-        self.ctrl.write("PHAS " + `value`)
+        self.ctrl.write("PHAS %f" % value)
         
     def getPhase(self):
         return str2num(self.ctrl.query("PHAS?"))[0]
@@ -530,7 +530,7 @@ class SR860(object):
     def gain(self, auxchannel=1):
         # not used with current measurement
         pass
-        return str2num(float(self.gains[round(self.ctrl.query("OAUX? " + `auxchannel`)[0]*2)/2]))
+        return str2num(float(self.gains[round(self.ctrl.query("OAUX? %i" % auxchannel)[0]*2)/2]))
         # OAUX 1- change to use DC offset on input, SR860 scan commands (xii) with data capture commmands (xiii) for DC voltage offset
 
     # measureXY , collectpointsXY functions for compatibility with GUI
@@ -568,21 +568,21 @@ class SR860(object):
         self.ctrl.write("SCNPAR REFD") # Set scan parameter to REFDc (reference DC)
         self.ctrl.write("SCNLOG LIN") # Set scan type to linear
         self.ctrl.write("SCNEND 0") # Set scan end mode to 2 (updown), 1 (repeat), 0 (once)
-        self.ctrl.write("SCNSEC " + `scnTime`) # Set scan time to x seconds (scnTime)
+        self.ctrl.write("SCNSEC %f" % scnTime) # Set scan time to x seconds (scnTime)
         self.ctrl.write("SCNDCATTN 1") # 7/05/19 Set dc output attenuator mode to auto 0 or fixed 1
-        self.ctrl.write("SCNDC BEG, " + `scnStart` + " MV") 
-        self.ctrl.write("SCNDC END, " + `scnEnd` + " MV") # Set beginning (BEG) and end (END) dc reference amplitude to V, where -5.00V < V < 5.00V
+        self.ctrl.write("SCNDC BEG, %f MV" % scnStart) 
+        self.ctrl.write("SCNDC END, %f MV" % scnEnd) # Set beginning (BEG) and end (END) dc reference amplitude to V, where -5.00V < V < 5.00V
         #print "SCNDC END, " + `scnEnd` + " MV"
         #time.sleep(1)
-        self.ctrl.write("SCNINRVL " + `scnInt`) # Set parameter update interval 0 <= scnInt <= 16 according to numeric table (manual pg 129)
+        self.ctrl.write("SCNINRVL %i" % scnInt) # Set parameter update interval 0 <= scnInt <= 16 according to numeric table (manual pg 129)
         self.ctrl.write("SCNENBL ON") # Set scan parameter to begin value but does not start scan
         time.sleep(10*tConstant)
         # Initialize lockin to correct state for capture measurement
         nFactor = numpy.where(maxArray>fCuttoff)[0][-1]
         capLength = int(numpy.ceil(maxArray[nFactor]*1*scnTime*8/1000))
         self.ctrl.write("CAPTURECFG XY") # Set capture configuration to X and Y
-        self.ctrl.write("CAPTURERATE " + `nFactor`) # Set capture rate to maximum rate /2^n for n=0
-        self.ctrl.write("CAPTURELEN " + `capLength`) # Set capture length according to formula in params
+        self.ctrl.write("CAPTURERATE %i" % nFactor) # Set capture rate to maximum rate /2^n for n=0
+        self.ctrl.write("CAPTURELEN %i" % capLength) # Set capture length according to formula in params
         starttime = time.time()
         self.ctrl.write("SCNRUN")
         self.ctrl.write("CAPTURESTART ONE, IMM")
@@ -795,11 +795,11 @@ class FD9002(object):
     def frequency(self, value):
         self._frequency = value
         try:        
-            self.ctrl.write("\x11\x0F" + `0` + "\x3B")
+            self.ctrl.write("\x11\x0F%0.0f\x3B" % 0)
             time.sleep(0.05)
-            self.ctrl.write("\x11\x0F" + `value` + "\x3B")
+            self.ctrl.write("\x11\x0F%f\x3B" % value)
         except:
-            print 'Warning: filter not set'
+            print('Warning: filter not set')
         
     def close(self):
         """ closes the VISA instance (I think) """
