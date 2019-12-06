@@ -30,10 +30,12 @@
                         wx.EmptyBitmap deprecated, use wx.Bitmap
                         wx.SetStringItem deprecated, use wx.SetItem
                         wx.InsertStringItem deprecated, use wx.InsertItem
+    NOTE: This version reinstates the SR830 lockin
     Requires files: harmInstrI.py (instrument library)
                     defaultI.json (default parameters)
 """
-""" TODO: fix edit tag button, transition away from obsolete lockin reserve  commmand, distinguish up/down curves on plot """
+""" TODO: fix edit tag button, transition away from obsolete lockin reserve  commmand, distinguish up/down curves on plot, allow easy switching
+          between SR830 and SR860 """
 
 import wx
 import wxmplot
@@ -291,9 +293,12 @@ class WorkerThread(Thread):
             #print data['data'][-1]
 
             # Calculate slope and offset from X,Y data
-            pval, perr, pvalX, pvalY = AnalyzeXYScanData(data['data'][-1]['V'],
-                            data['data'][-1]['X'],
-                            data['data'][-1]['Y'])
+            #pval, perr, pvalX, pvalY = AnalyzeXYScanData(data['data'][-1]['V'],
+            #                data['data'][-1]['X'],
+            #                data['data'][-1]['Y'])
+            pval, perr, pvalX, pvalY = analyzeXYData(data['data'][-1]['V'],
+                data['data'][-1]['X'], data['data'][-1]['Xerr'],
+                data['data'][-1]['Y'], data['data'][-1]['Yerr'])
                                     
             # Append fit values to pvals array
             pvals = np.append(pvals, [pval], axis=0)
@@ -345,7 +350,7 @@ class WorkerThread(Thread):
         # set lockin filter settings
         lockin.filter = params['lockinFilter']
         lockin.filterslope = params['lockinFilterSlope']
-        #lockin.ctrl.write("ISRC 2") # set to perform current measurement with I*10^6 sensitivity
+        lockin.ctrl.write("ISRC 2") # set to perform current measurement with I*10^6 sensitivity
         lockin.sensitivity = params['lockinCapSensitivity']
         lockin.amplitude = params['acAmplitude']/params['acInputGain']
 
@@ -358,7 +363,10 @@ class WorkerThread(Thread):
         tfactor = 1/0.03
     
         # Vs = np.arange(params['MinVoltage'], params['MaxVoltage'] + params['TimeVoltage'], params['TimeVoltage'])
-        data = dict(time=time.time()-params['startTime'], V=None, X=None, Xerr=None, Y=None, Yerr=None)
+        #data = dict(time=time.time()-params['startTime'], V=None, X=None, Xerr=None, Y=None, Yerr=None)
+        Vs = np.arange(params['MinVoltage'], params['MaxVoltage'] + params['StepVoltage'], params['StepVoltage'])
+        data = dict(time=time.time()-params['startTime'], V=Vs, X=np.empty(Vs.size), Xerr=np.empty(Vs.size), Y=np.empty(Vs.size), Yerr=np.empty(Vs.size))
+
         
         # set frequency
         lockin.frequency = params['acFrequency']
@@ -391,7 +399,7 @@ class WorkerThread(Thread):
         #time.sleep(1.5*tfactor*tc)        
         
         # Set up sweep/scan, replace block
-        self.PostEvent(WorkerStatus("Measuring second harmonic amplitude..."))
+        """self.PostEvent(WorkerStatus("Measuring second harmonic amplitude..."))
         X1, Y1, V1=lockin.measureXYV(0, params['MinVoltage'], params['TimeVoltage']/2)
         X2, Y2, V2=lockin.measureXYV(params['MinVoltage'], params['MaxVoltage'], params['TimeVoltage'])
         X3, Y3, V3=lockin.measureXYV(params['MaxVoltage'], 0, params['TimeVoltage']/2)
@@ -399,7 +407,20 @@ class WorkerThread(Thread):
         data['X'] = np.hstack((X1, X2, X3))*1e12
         data['Y'] = np.hstack((Y1, Y2, Y3))*1e12
         data['V'] = np.hstack((V1, V2, V3))
-        
+        """
+
+        for i,V in enumerate(Vs):
+            self.PostEvent(WorkerStatus("Measuring second harmonic amplitude... Vdc = %0.1f mV..." % V))
+            lockin.dcVoltage = V/params['dcInputGain']
+            time.sleep(0.5*tfactor*tc)
+            data['X'][i], data['Y'][i], data['Xerr'][i], data['Yerr'][i] = lockin.collectPointsXY(5, 3*tc)
+            
+            # convert to real units [A]->[pA]
+            data['X'][i] = data['X'][i]*1e12
+            data['Xerr'][i] = data['Xerr'][i]*1e12
+            data['Y'][i] = data['Y'][i]*1e12
+            data['Yerr'][i] = data['Yerr'][i]*1e12
+
         lockin.dcVoltage = 0
         lockin.phase = 0
                         
@@ -450,7 +471,7 @@ class mainFrame(wx.Frame):
         
         lblMinVoltage = wx.StaticText(panel, label="Minimum dc voltage (mV)")
         lblMaxVoltage = wx.StaticText(panel, label="Maximum dc voltage (mV)")
-        lblTimeVoltage = wx.StaticText(panel, label="Scan time (s)")
+        lblStepVoltage = wx.StaticText(panel, label="Step dc voltage (mV)")
         lbldcInputGain = wx.StaticText(panel, label="dc voltage input gain (mV/V)")
         lblAmplitude = wx.StaticText(panel, label="ac rms Amplitude (mV)")
         lblFrequency = wx.StaticText(panel, label="ac Frequency (Hz)")
@@ -463,16 +484,16 @@ class mainFrame(wx.Frame):
                 
         self.txtMinVoltage = wx.TextCtrl(panel, name="MinVoltage")
         self.txtMaxVoltage = wx.TextCtrl(panel, name="MaxVoltage")
-        self.txtTimeVoltage = wx.TextCtrl(panel, name="TimeVoltage")
+        self.txtStepVoltage = wx.TextCtrl(panel, name="StepVoltage")
         self.txtdcInputGain = wx.TextCtrl(panel, name="dcInputGain")
         self.txtAmplitude = wx.TextCtrl(panel, name="acAmplitude")
         self.txtFrequency = wx.TextCtrl(panel, name="acFrequency")
         self.txtacInputGain = wx.TextCtrl(panel, name="acInputGain")
 
-        filterkeys = [k for v,k in sorted([(v[0], k) for k, v in harmInstr.SR860.filterdict.items()])]
-        filterslopekeys = [k for v,k in sorted([(v, k) for k, v in harmInstr.SR860.filterslopedict.items()])]
-        sensitivitykeys = [k for v,k in sorted([(v, k) for k, v in harmInstr.SR860.sensitivitydict.items()])]
-        reservekeys = [k for v,k in sorted([(v, k) for k, v in harmInstr.SR860.reservedict.items()])]
+        filterkeys = [k for v,k in sorted([(v[0], k) for k, v in harmInstr.SR830.filterdict.items()])]
+        filterslopekeys = [k for v,k in sorted([(v, k) for k, v in harmInstr.SR830.filterslopedict.items()])]
+        sensitivitykeys = [k for v,k in sorted([(v, k) for k, v in harmInstr.SR830.sensitivitydict.items()])]
+        reservekeys = [k for v,k in sorted([(v, k) for k, v in harmInstr.SR830.reservedict.items()])]
         reservekeys.append('auto')
         
         self.cmblockinFilter = wx.ComboBox(panel, name="lockinFilter", choices=filterkeys)
@@ -486,13 +507,13 @@ class mainFrame(wx.Frame):
         self.btnSetParams = wx.Button(panel, label="Set Parameters on Lockin")
         
         # Define a list of textboxes for easily reading out parameters
-        self.txtboxes = [self.txtMinVoltage, self.txtMaxVoltage, self.txtTimeVoltage, self.txtdcInputGain,
+        self.txtboxes = [self.txtMinVoltage, self.txtMaxVoltage, self.txtStepVoltage, self.txtdcInputGain,
                          self.txtAmplitude, self.txtFrequency, self.txtacInputGain,
                          self.cmblockinFilter, self.cmblockinFilterSlope, self.cmblockinCapSensitivity, self.cmblockinSensitivity, self.cmblockinReserve]
         
         vbox.AddMany([(lblMinVoltage), (self.txtMinVoltage, 1, wx.EXPAND),
                     (lblMaxVoltage), (self.txtMaxVoltage, 1, wx.EXPAND),
-                    (lblTimeVoltage), (self.txtTimeVoltage, 1, wx.EXPAND),
+                    (lblTimeVoltage), (self.txtStepVoltage, 1, wx.EXPAND),
                     (lbldcInputGain), (self.txtdcInputGain, 1, wx.EXPAND),
                     (lblAmplitude), (self.txtAmplitude, 1, wx.EXPAND),
                     (lblFrequency), (self.txtFrequency, 1, wx.EXPAND),
@@ -807,7 +828,7 @@ class mainFrame(wx.Frame):
     def evtPushPrep(self, event):
         """ Event handler for "Prep" button. Runs membrane prep script to set harmonic 
             to 1, lockin sensitivity to 100mV/nA for optimal membrane formation conditions. """
-        lockin = harmInstr.SR860()
+        lockin = harmInstr.SR830()
         lockin.sensitivity = "100 mV/nA"
         lockin.harmonic = 1
         lockin.close()
@@ -1003,7 +1024,7 @@ class mainFrame(wx.Frame):
     def SetParams(self, event):
         """ Set parameters on lockin."""
         
-        lockin = harmInstr.SR860()
+        lockin = harmInstr.SR830()
         params = self.ReadParams()
         lockin.frequency = params['acFrequency']
         lockin.amplitude = params['acAmplitude']/params['acInputGain']
