@@ -451,7 +451,7 @@ class mainFrame(wx.Frame):
     
     def __init__(self, parent, title):
         """ Initialize window appearance """
-        wx.Frame.__init__(self, parent, title=title, size=(1600,1200))
+        wx.Frame.__init__(self, parent, title=title, size=(1600,1170))
 
         # Bind to event handler for closing main window
         self.Bind(wx.EVT_CLOSE, self.evtClose)
@@ -889,8 +889,6 @@ class mainFrame(wx.Frame):
                                 [data['data'][j]['harm3X'] for j in range(len(data['data']))]
                                 ))
 
-        print(exportdata)
-
         # Create header from parameters, starting with the filename
         # and starting time and date
         header = self.fn[:-3] + "txt\n" + data['params']['startString']+ "\n"
@@ -905,8 +903,6 @@ class mainFrame(wx.Frame):
 
         # Add column headings
         header = header + "\nTime (s)\tC (pF)    \tOffset (mV)\tSlope (pA/mV)\t3rd harmonic amplitude (pA)"
-        
-        print(header)
 
         # Write columnar data
         np.savetxt(self.fn[:-3] + "txt", np.transpose(exportdata), header=header, delimiter="\t", fmt="%0.6e")
@@ -1084,5 +1080,6 @@ class mainFrame(wx.Frame):
 if __name__ == '__main__':
     app = wx.App()
     frame = mainFrame(None, "Bilayer overtone analysis")
+    frame.SetPosition((0,0))
     app.MainLoop()
 
