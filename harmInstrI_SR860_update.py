@@ -13,7 +13,7 @@ import struct
 #  This is a function to format the query output from string--> list of strings --> list of numbers
 def str2num(str):
     li = str[:-1].split(",")
-    return map(float,li)
+    return list(map(float,li))
 
 rm=ResourceManager()
 
@@ -100,7 +100,7 @@ class SR830(object):
         self.inv_sensitivitydict = {v: k for k, v in self.sensitivitydict.items()}
         self.inv_reservedict = {v: k for k, v in self.reservedict.items()}   
         
-       # self.ReadValues()
+        self.ReadValues()
         
     def Initialize(self):
         # Initialize lockin to correct state for second harmonics measurement
@@ -115,13 +115,14 @@ class SR830(object):
         self._filterslope = self.inv_filterslopedict[int(self.ctrl.query("OFSL?")[:-1])]
         self._sensitivity = self.inv_sensitivitydict[int(self.ctrl.query("SENS?")[:-1])]
         self._reserve = self.inv_reservedict[int(self.ctrl.query("RMOD?")[:-1])]
-        self._frequency = str2num(self.ctrl.query("FREQ?")[0])
+        self._frequency = str2num(self.ctrl.query("FREQ?"))[0]
             # alternatively- str2num(self._frequency)
-        self._amplitude = str2num(self.ctrl.query("SLVL?")[0])
+        self._amplitude = str2num(self.ctrl.query("SLVL?"))[0]
             # alternatively- str2num(self._amplitude)
-        self._harmonic = str2num(self.ctrl.query("HARM?")[0])
+        self._harmonic = str2num(self.ctrl.query("HARM?"))[0]
             # alternatively- str2num(self._harmonic)
-        self._dcVoltage = str2num(self.ctrl.query("AUXV? 1")[0])
+        self._dcVoltage = str2num(self.ctrl.query("AUXV? 1"))[0]
+        #print(self._dcVoltage)
             # alternatively- str2num(self.dcVoltage)
 
     def close(self):
@@ -230,7 +231,7 @@ class SR830(object):
         self.ctrl.write("PHAS %G" % value)
         
     def getPhase(self):
-        return str2num(self.ctrl.query("PHAS?")[0])
+        return str2num(self.ctrl.query("PHAS?"))[0]
         
     def autoPhase(self):
         self.ctrl.write("APHS")
@@ -240,12 +241,12 @@ class SR830(object):
         
     def hasOverload(self):
         """ Looks for an input or amplifier overload. """
-        return  str2num(bool(self.ctrl.query("LIAE? 0")[0]))
+        return  bool(str2num(self.ctrl.query("LIAE? 0"))[0])
     
     def gain(self, auxchannel=1):
         # not used with current measurement
         pass
-        return str2num(float(self.gains[round(self.ctrl.query("OAUX? %i" % auxchannel)[0]*2)/2]))
+        return float(self.gains[round(str2num(self.ctrl.query("OAUX? %i" % auxchannel))[0]*2)/2])
 
     def measureRTheta(self):
         return str2num(self.ctrl.query('SNAP? 3,4'))

@@ -266,7 +266,7 @@ class WorkerThread(Thread):
         
         # Initialize instruments
         # TODO: Write a config file that contains all the addresses and configuration information for the entire experiment.
-        self.lockin = harmInstr.SR860()
+        self.lockin = harmInstr.SR830()
         self.lockin.Initialize()
         # self.lockin.Scan()
         # self.lockin.Capture()
@@ -451,7 +451,7 @@ class mainFrame(wx.Frame):
     
     def __init__(self, parent, title):
         """ Initialize window appearance """
-        wx.Frame.__init__(self, parent, title=title, size=(1500,1120))
+        wx.Frame.__init__(self, parent, title=title, size=(1600,1200))
 
         # Bind to event handler for closing main window
         self.Bind(wx.EVT_CLOSE, self.evtClose)
@@ -513,7 +513,7 @@ class mainFrame(wx.Frame):
         
         vbox.AddMany([(lblMinVoltage), (self.txtMinVoltage, 1, wx.EXPAND),
                     (lblMaxVoltage), (self.txtMaxVoltage, 1, wx.EXPAND),
-                    (lblTimeVoltage), (self.txtStepVoltage, 1, wx.EXPAND),
+                    (lblStepVoltage), (self.txtStepVoltage, 1, wx.EXPAND),
                     (lbldcInputGain), (self.txtdcInputGain, 1, wx.EXPAND),
                     (lblAmplitude), (self.txtAmplitude, 1, wx.EXPAND),
                     (lblFrequency), (self.txtFrequency, 1, wx.EXPAND),
@@ -738,7 +738,7 @@ class mainFrame(wx.Frame):
         selection = self.lstTags.GetFirstSelected()
         
         if selection != -1:
-            dialog = wx.TextEntryDialog(self, "Edit tag text:", defaultValue=self.lstTags.GetItem(selection, 1).GetText())
+            dialog = wx.TextEntryDialog(self, "Edit tag text:", value=self.lstTags.GetItem(selection, 1).GetText())
             
             if (dialog.ShowModal() == wx.ID_OK):
                 tagtext = dialog.GetValue()
@@ -779,6 +779,7 @@ class mainFrame(wx.Frame):
         self.DisableParams()
         self.btnStart.Enable(False)
         self.btnZap.Enable(False)
+        self.btnPrep.Enable(False)
         self.btnStop.Enable(True)
         self.TagsEnabled(True)
         
@@ -818,7 +819,7 @@ class mainFrame(wx.Frame):
         """ Event handler for "Zap" button. Zaps the membrane with 1 V for a
             short time. """
             
-        lockin = harmInstr.SR860()
+        lockin = harmInstr.SR830()
         initV = lockin.dcVoltage
         lockin.dcVoltage = 2
         time.sleep(0.01)
@@ -888,6 +889,8 @@ class mainFrame(wx.Frame):
                                 [data['data'][j]['harm3X'] for j in range(len(data['data']))]
                                 ))
 
+        print(exportdata)
+
         # Create header from parameters, starting with the filename
         # and starting time and date
         header = self.fn[:-3] + "txt\n" + data['params']['startString']+ "\n"
@@ -903,8 +906,10 @@ class mainFrame(wx.Frame):
         # Add column headings
         header = header + "\nTime (s)\tC (pF)    \tOffset (mV)\tSlope (pA/mV)\t3rd harmonic amplitude (pA)"
         
+        print(header)
+
         # Write columnar data
-        np.savetxt(open(self.fn[:-3] + "txt", "w"), np.transpose(exportdata), header=header, delimiter="\t", fmt="%0.6e")
+        np.savetxt(self.fn[:-3] + "txt", np.transpose(exportdata), header=header, delimiter="\t", fmt="%0.6e")
         
         """ JSON file output. Can fail if file is being read, so add error handler """
         try:
@@ -988,6 +993,7 @@ class mainFrame(wx.Frame):
         self.EnableParams()
         self.btnStart.Enable(True)
         self.btnZap.Enable(True)
+        self.btnPrep.Enable(True)
         self.TagsEnabled(False)
         
         self.SetStatusText("", number=0)
