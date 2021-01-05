@@ -605,7 +605,7 @@ class SR860(object):
         getLength = min(int(numpy.ceil(capLengthAvail)), capLength)
         #print capLengthAvail, capLength, getLength
         getRange = range(0,getLength,64)
-#        getRange.append(getLength+1)
+        #getRange.append(getLength+1)
         data = []
         for start in getRange:
             cmd = "CAPTUREGET? %i,%i" % (int(start), min(64, getLength))
@@ -673,6 +673,284 @@ class SR860(object):
             time.sleep(pointInterval)
         
         return numpy.mean(Xs), numpy.mean(Ys), numpy.mean(Vs), numpy.std(Xs), numpy.std(Ys), numpy.std(Vs)"""
+        
+    def collectPointsRTheta(self, numPoints, pointInterval):
+        Rs = numpy.empty(numPoints)
+        Ts = numpy.empty(numPoints)
+        for j in range(numPoints):
+            Rs[j], Ts[j] = self.measureRTheta()
+            time.sleep(pointInterval)
+
+        Ts = (Ts + 360) % 360.
+        
+        return numpy.mean(Rs), numpy.mean(Ts), numpy.std(Rs), numpy.std(Ts)
+
+    def collectPoints(self, numPoints, pointInterval):
+        """ For back compatibility """
+        return self.collectPointsRTheta(numPoints, pointInterval)
+
+class SR860_sim(object):
+    """ Simulated Stanford Research Systems SR860 instrument class 
+        Manual: https://www.thinksrs.com/downloads/pdfs/manuals/SR860m.pdf """
+    # Define dictionary values for SR860 object
+
+    sensitivitydict =  {"1 V[uA]": 0,
+                                "500 mV/nA": 1,
+                                "200 mV/nA": 2,
+                                "100 mV/nA": 3,
+                                "50 mV/nA": 4,
+                                "20 mV/nA": 5,
+                                "10 mV/nA": 6,
+                                "5 mV/nA": 7,
+                                "2 mV/nA": 8,
+                                "1 mV/nA": 9,
+                                "500 uV/pA": 10,
+                                "200 uV/pA": 11,
+                                "100 uV/pA": 12,
+                                "50 uV/pA": 13,
+                                "20 uV/pA": 14,
+                                "10 uV/pA": 15,
+                                "5 uV/pA": 16,
+                                "2 uV/pA": 17,
+                                "1 uV/pA": 18,
+                                "500 nV/fA": 19,
+                                "200 mV/fA": 20,
+                                "100 nV/fA": 21,
+                                "50 nV/fA": 22,
+                                "20 nV/fA": 23,
+                                "10 nV/fA": 24,
+                                "5 nV/fA": 25,
+                                "2 nV/fA": 26,
+                                "1 nV/fA": 27}
+                                
+    filterdict = {"1 us": (0, 1e-6),
+                            "3 us": (1, 3e-6),
+                            "10 us": (2, 10e-6),
+                            "30 us": (3, 30e-6),
+                            "100 us": (4, 100e-6),
+                            "300 us": (5, 300e-6),
+                            "1 ms": (6, 1e-3),
+                            "3 ms": (7, 3e-3),
+                            "10 ms": (8, 10e-3),
+                            "30 ms": (9, 30e-3),
+                            "100 ms": (10, 100e-3),
+                            "300 ms": (11, 300e-3),
+                            "1 s": (12, 1.),
+                            "3 s": (13, 3.),
+                            "10 s": (14, 10.),
+                            "30 s": (15, 30.),
+                            "100 s": (16, 100),
+                            "300 s": (17, 300),
+                            "1 ks": (18, 1e3),
+                            "3 ks": (19, 3e3),
+                            "10 ks": (20, 10e3),
+                            "30 ks": (21, 30e3)}
+                            
+    filterslopedict = {"6 dB/oct": 0,
+                                    "12 dB/oct": 1,
+                                    "18 dB/oct": 2,
+                                    "24 dB/oct": 3}
+                                    
+    reservedict = {"high": 0,
+                                    "normal": 1,
+                                    "low noise": 2}
+
+    def __init__( self, address=4 ):
+        #self.ctrl = rm.open_resource( "GPIB::%s" % address )
+        #self.ctrl.open()
+        # Check OUTX 1 channel address for SR860
+        # self.ctrl.write("OUTX 1") # set output to GPIB - Obsolete for SR860
+        # Set dictionaries of values- may need to update values
+        self.gains = dict({0.5: 0.05, 1: 0.1, 1.5: 0.2, 2.0: 0.5, 2.5: 1, 3.0: 2, 3.5: 5, 4.0: 10, 4.5: 20, 5.0: 50, 5.5: 100, 6.0: 200, 6.5: 500})
+        
+        """self.filterdict = filterdict
+        self.filterslopedict = filterslopedict
+        self.sensitivitydict = sensitivitydict
+        self.reservedict = reservedict"""
+        
+        self.inv_filterdict = {v[0]: k for k, v in self.filterdict.items()}
+        self.inv_filterslopedict = {v: k for k, v in self.filterslopedict.items()}
+        self.inv_sensitivitydict = {v: k for k, v in self.sensitivitydict.items()}
+        self.inv_reservedict = {v: k for k, v in self.reservedict.items()}
+        self.ReadValues()
+        
+    def Initialize(self):
+        # Initialize lockin to correct state for second harmonics measurement
+        pass
+
+    def ReadValues(self):
+        # Populate properties with values read from instrument
+        # Update: .ask replaced with .query, str2num function to format output
+        pass
+        
+    def close(self):
+        """ closes the VISA instance (I think) """
+        pass
+    
+    @property
+    def filter(self):
+        return self._filter
+        
+    @filter.setter
+    def filter(self, key):
+        if key in self.filterdict.keys():
+            self._filter = key
+            #self.ctrl.write("OFLT %i" % self.filterdict[key][0])
+        else:
+            print("Warning: filter setting %s not valid" % key)
+            
+    @property
+    def filterslope(self):
+        return self._filterslope
+        
+    @filterslope.setter
+    def filterslope(self, key):
+        if key in self.filterslopedict.keys():
+            self._filterslope = key
+            #self.ctrl.write("OFSL %i" % self.filterslopedict[key])
+        else:
+            print("Warning: filter slope setting %s not valid" % key)
+            
+    """ @property
+    def reserve(self):
+        return self._reserve """
+        
+    """ @reserve.setter # may be obsolete SR860
+    def reserve(self, key):
+        if key in self.reservedict.keys():
+            self._reserve = key
+            # self.ctrl.write("RMOD %i" % self.reservedict[key])
+            # No dynamic reserve setting on SR860- see pg 48-49
+        elif key == 'auto':
+            self.autoReserve() # change to autoScale (line 462)- no auto reserve key on SR860
+        else:
+            print "Warning: reserve setting %s not valid" % key """            
+            
+    @property
+    def sensitivity(self):
+        return self._sensitivity
+        
+    @sensitivity.setter
+    def sensitivity(self, key):
+        if key in self.sensitivitydict.keys():
+            self._sensitivity = key
+            #self.ctrl.write("SCAL %i" % self.sensitivitydict[key])
+        else:
+            print("Warning: sensitivity setting %s not valid" % key)
+                
+    @property
+    def frequency(self):
+        return self._frequency
+    
+    @frequency.setter
+    def frequency(self, value):
+        self._frequency = value        
+        #self.ctrl.write("FREQ %G" % value)
+    
+    @property
+    def amplitude(self):
+        return self._amplitude
+    
+    @amplitude.setter
+    def amplitude(self, value):
+        if value > 5.:
+            print("Warning: Lock-in amplitude cannot be greater than 5 V. Reducing to 5 V.")
+            value = 5.
+            
+        self._amplitude = value
+        #self.ctrl.write("SLVL %f" % value)
+    
+    @property
+    def harmonic(self):
+        return self._harmonic
+    
+    @harmonic.setter
+    def harmonic(self, value):
+        self._harmonic = value
+        #self.ctrl.write("HARM %i" % value)
+    
+    @property
+    def dcVoltage(self):
+        return self._dcVoltage
+        # SR860 scan commands (xii) with data capture commmands (xiii) for DC voltage offset
+    
+    @dcVoltage.setter
+    def dcVoltage(self, value):
+        # TODO: can't be greater than +/-10.5 V. Check for this.
+        self._dcVoltage = value
+        #self.ctrl.write("SOFF %f" % value) # DC output
+        #print "SOFF " + `value`
+
+    @property
+    def phase(self):
+        return self._phase
+        
+    @phase.setter
+    def phase(self, value):
+        # TODO: can't be greater than +730/-360. Check for this.
+        self._phase = value
+        #self.ctrl.write("PHAS %f" % value)
+        
+    def getPhase(self):
+        #return str2num(self.ctrl.query("PHAS?"))[0]
+        return self._phase
+        
+    def autoPhase(self):
+        #self.ctrl.write("APHS")
+        pass
+        
+    def autoScale(self):
+        #self.ctrl.write("ASCL")
+        pass
+        
+    def hasOverload(self):
+        """ Looks for an input or amplifier overload. """
+        return False
+        #return  str2num(bool(self.ctrl.query("LIAE? 0")))[0]
+    
+    def gain(self, auxchannel=1):
+        # not used with current measurement
+        pass
+        return str2num(float(self.gains[round(self.ctrl.query("OAUX? %i" % auxchannel)[0]*2)/2]))
+        # OAUX 1- change to use DC offset on input, SR860 scan commands (xii) with data capture commmands (xiii) for DC voltage offset
+
+    # measureXY , collectpointsXY functions for compatibility with GUI
+    def measureXY(self):
+        return numpy.random.randn(2)*1e-12
+        #return str2num(self.ctrl.query('SNAP? 0,1'))
+    
+    def measureRTheta(self):
+        return numpy.array([numpy.random.randn(1)*1e-12, 360*(numpy.random.random(1) - 0.5)])
+        #return str2num(self.ctrl.query('SNAP? 2,3'))
+
+    def collectPointsXY(self, numPoints, pointInterval):
+        Xs = numpy.empty(numPoints)
+        Ys = numpy.empty(numPoints)
+        for j in range(numPoints):
+            Xs[j], Ys[j] = self.measureXY()
+            time.sleep(pointInterval)
+        
+        return numpy.mean(Xs), numpy.mean(Ys), numpy.std(Xs), numpy.std(Ys)
+
+    # Function to run scan and capture, unpack and return X, Y, V
+    def measureXYV(self,scnStart,scnEnd,scnTime):
+        # Initialize lockin to correct state for scan measurement
+        # Calculate capture length based on scan time, move to params
+        # Voltage- -5.00V < V < 5.00V
+        #print scnTime, type(scnTime)
+        V = numpy.linspace(scnStart,scnEnd,1001)
+        X = (numpy.random.randn(len(V)) - V)*1e-12
+        Y = (numpy.random.randn(len(V)) + V)*1e-12
+        
+        self.dcVoltage = scnEnd/1000.
+        return X, Y, V
+        
+    def sweep(self, propertyName, vals, equilInterval, numPoints, pointInterval):
+        """ Attempt to sweep a given property (e.g. dcVoltage or acAmplitude).
+            For second harmonic analysis, this would allow the use of the same 
+            function for both second and third harmonic determination. Not
+            currently used. """
+        pass
         
     def collectPointsRTheta(self, numPoints, pointInterval):
         Rs = numpy.empty(numPoints)

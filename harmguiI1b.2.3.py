@@ -264,7 +264,8 @@ class WorkerThread(Thread):
         
         # Initialize instruments
         # TODO: Write a config file that contains all the addresses and configuration information for the entire experiment.
-        self.lockin = harmInstr.SR860()
+        #self.lockin = harmInstr.SR860_sim() # for simulated lockin only
+        self.lockin = harmInstr.SR860() # for simulated lockin only
         self.lockin.Initialize()
         # self.lockin.Scan()
         # self.lockin.Capture()
