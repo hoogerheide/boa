@@ -13,7 +13,7 @@ import struct
 #  This is a function to format the query output from string--> list of strings --> list of numbers
 def str2num(str):
     li = str[:-1].split(",")
-    return map(float,li)
+    return list(map(float,li))
 
 rm=ResourceManager()
 
@@ -617,7 +617,7 @@ class SR860(object):
             #print len(buf), maxArray[nFactor], scnTime, maxArray[nFactor]*scnTime
             hdr = struct.unpack_from('<cc', buf) # Read binary header in little endian format
             datalength = struct.unpack_from('<' + 'c'*int(hdr[1]), buf, 2)
-            #print datalength
+            datalength = [d.decode() for d in datalength]
             data = data + list(struct.unpack_from('<%if' % (int("".join(datalength))/4), buf, 2 + int(hdr[1])))
             #alldata = alldata + data
             #print alldata[0:10], alldata[-10:], len(data), len(alldata)
