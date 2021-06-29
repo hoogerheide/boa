@@ -884,7 +884,7 @@ class mainFrame(wx.Frame):
         header = header + "\nTime (s)\tC (pF)    \tOffset (mV)\tSlope (pA/mV)\t3rd harmonic amplitude (pA)"
         
         # Write columnar data
-        np.savetxt(open(self.fn[:-3] + "txt", "w"), np.transpose(exportdata), header=header, delimiter="\t", fmt="%0.6e")
+        np.savetxt(self.fn[:-3] + "txt", np.transpose(exportdata), header=header, delimiter="\t", fmt="%0.6e")
         
         """ JSON file output. Can fail if file is being read, so add error handler """
         try:
