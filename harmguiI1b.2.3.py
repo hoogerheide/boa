@@ -371,10 +371,10 @@ class WorkerThread(Thread):
         data['harm1Y'] = harm1data[1]*1e12
         data['harm1Xerr'] = harm1data[2]*1e12
         data['harm1Yerr'] = harm1data[3]*1e12
-        data['harm1C'] = data['harm1X']*1e3/(2*np.pi*lockin.amplitude*params['acInputGain']*lockin.frequency)
-        data['harm1Cerr'] = data['harm1Xerr']*1e3/(2*np.pi*lockin.amplitude*params['acInputGain']*lockin.frequency)
-        data['harm1G'] = data['harm1Y']*1e3/(lockin.amplitude*params['acInputGain'])
-        data['harm1Gerr'] = data['harm1Yerr']*1e3/(lockin.amplitude*params['acInputGain'])
+        data['harm1C'] = np.abs(data['harm1Y'])*1e3/(2*np.pi*lockin.amplitude*params['acInputGain']*lockin.frequency)
+        data['harm1Cerr'] = data['harm1Yerr']*1e3/(2*np.pi*lockin.amplitude*params['acInputGain']*lockin.frequency)
+        data['harm1G'] = np.abs(data['harm1X'])*1e3/(lockin.amplitude*params['acInputGain'])
+        data['harm1Gerr'] = data['harm1Xerr']*1e3/(lockin.amplitude*params['acInputGain'])
         
         # collect first harmonic (in real units: convert from [V]->[pF])
         self.PostEvent(WorkerStatus("Measuring capacitance..."))
@@ -649,7 +649,7 @@ class mainFrame(wx.Frame):
         self.lstData.InsertColumn(self.lstData.GetColumnCount(), "N", width=40)
         self.lstData.InsertColumn(self.lstData.GetColumnCount(), "Time (s)", width=80)
         self.lstData.InsertColumn(self.lstData.GetColumnCount(), "C (pF)", width=80)
-        self.lstData.InsertColumn(self.lstData.GetColumnCount(), "G (S)", width=80)
+        self.lstData.InsertColumn(self.lstData.GetColumnCount(), "G (pS)", width=80)
         self.lstData.InsertColumn(self.lstData.GetColumnCount(), "C2 (pF)", width=80)
         self.lstData.InsertColumn(self.lstData.GetColumnCount(), "Second harmonic offset (mV)", width=colwidth)
         self.lstData.InsertColumn(self.lstData.GetColumnCount(), "Second harmonic slope (pA/mV)", width=colwidth)
@@ -901,6 +901,7 @@ class mainFrame(wx.Frame):
         # Create columnar data array
         exportdata = np.vstack(([data['data'][j]['time'] for j in range(len(data['data']))],
                                 [data['data'][j]['C'] for j in range(len(data['data']))],
+                                [data['data'][j]['harm1G'] for j in range(len(data['data']))],
                                 data['pvals']['V0'], np.array(data['pvals']['b']),
                                 [data['data'][j]['harm3X'] for j in range(len(data['data']))]
                                 ))
@@ -918,7 +919,7 @@ class mainFrame(wx.Frame):
             header = header + "%s\t%s\n" % (data['tags'][j]['time'], data['tags'][j]['tag'])
 
         # Add column headings
-        header = header + "\nTime (s)\tC (pF)    \tOffset (mV)\tSlope (pA/mV)\t3rd harmonic amplitude (pA)"
+        header = header + "\nTime (s)\tC (pF)    \tG (pS)\tOffset (mV)\tSlope (pA/mV)\t3rd harmonic amplitude (pA)"
         
         # Write columnar data
         np.savetxt(self.fn[:-3] + "txt", np.transpose(exportdata), header=header, delimiter="\t", fmt="%0.6e")
