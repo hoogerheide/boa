@@ -5,6 +5,7 @@
           take them from an arbitrary state and make them ready for second
           harmonic analysis."""
 
+from matplotlib.pyplot import step
 import numpy
 from visa import ResourceManager
 import time
@@ -583,6 +584,7 @@ class SR860(object):
         self.ctrl.write("CAPTURECFG XY") # Set capture configuration to X and Y
         self.ctrl.write("CAPTURERATE %i" % nFactor) # Set capture rate to maximum rate /2^n for n=0
         self.ctrl.write("CAPTURELEN %i" % capLength) # Set capture length according to formula in params
+        tStep = 1./str2num(self.ctrl.query("CAPTURERATE?"))[0]
         starttime = time.time()
         self.ctrl.write("SCNRUN")
         self.ctrl.write("CAPTURESTART ONE, IMM")
@@ -630,13 +632,13 @@ class SR860(object):
         idx = int(numpy.floor(maxArray[nFactor]*1*scnTime))
         X=X[0:idx]
         Y=Y[0:idx]
-        #tStep = scnTime/idx
+        #tStep = maxArray[nFactor]
         #vTime = numpy.arange(0,scnTime,tStep)
         V = numpy.arange(scnStart,scnEnd,(scnEnd-scnStart)/float(idx))
         #print "End of collection", idx, len(X*Y*V)
         self.dcVoltage = scnEnd/1000.
         self.ctrl.write("SCNENBL OFF")
-        return X, Y, V
+        return X, Y, V, tStep
         
     def sweep(self, propertyName, vals, equilInterval, numPoints, pointInterval):
         """ Attempt to sweep a given property (e.g. dcVoltage or acAmplitude).

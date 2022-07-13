@@ -365,12 +365,18 @@ class WorkerThread(Thread):
         lockin.sensitivity = params['lockinSensitivity1']
         lockin.frequency = params['acFrequency1']
         lockin.amplitude = params['acAmplitude1'] / params['acInputGain']
+        #time.sleep(1.5*tfactor*tc)
+        #harm1data = lockin.collectPointsXY(5, 3*tc)
         time.sleep(1.5*tfactor*tc)
-        harm1data = lockin.collectPointsXY(5, 3*tc)
-        data['harm1X'] = harm1data[0]*1e12
-        data['harm1Y'] = harm1data[1]*1e12
-        data['harm1Xerr'] = harm1data[2]*1e12
-        data['harm1Yerr'] = harm1data[3]*1e12
+        data['h1X'], data['h1Y'], _, tstep = lockin.measureXYV(1, 0, params['TimeVoltage']/2)
+        data['h1X'], data['h1Y'] = data['h1X'] * 1e12, data['h1Y'] * 1e12
+        data['h1t'] = tstep * np.arange(len(data['h1X']))
+        #data['harm1X'] = harm1data[0]*1e12
+        #data['harm1Y'] = harm1data[1]*1e12
+        #data['harm1Xerr'] = harm1data[2]*1e12
+        #data['harm1Yerr'] = harm1data[3]*1e12
+        data['harm1X'], data['harm1Xerr'] = np.mean(data['h1X']), np.std(data['h1X'])
+        data['harm1Y'], data['harm1Yerr'] = np.mean(data['h1Y']), np.std(data['h1Y'])
         data['harm1C'] = np.abs(data['harm1Y'])*1e3/(2*np.pi*lockin.amplitude*params['acInputGain']*lockin.frequency)
         data['harm1Cerr'] = data['harm1Yerr']*1e3/(2*np.pi*lockin.amplitude*params['acInputGain']*lockin.frequency)
         data['harm1G'] = np.abs(data['harm1X'])*1e3/(lockin.amplitude*params['acInputGain'])
@@ -409,9 +415,9 @@ class WorkerThread(Thread):
         
         # Set up sweep/scan, replace block
         self.PostEvent(WorkerStatus("Measuring second harmonic amplitude..."))
-        X1, Y1, V1=lockin.measureXYV(0, params['MinVoltage'], params['TimeVoltage']/2)
-        X2, Y2, V2=lockin.measureXYV(params['MinVoltage'], params['MaxVoltage'], params['TimeVoltage'])
-        X3, Y3, V3=lockin.measureXYV(params['MaxVoltage'], 0, params['TimeVoltage']/2)
+        X1, Y1, V1, _ = lockin.measureXYV(0, params['MinVoltage'], params['TimeVoltage']/2)
+        X2, Y2, V2, _ = lockin.measureXYV(params['MinVoltage'], params['MaxVoltage'], params['TimeVoltage'])
+        X3, Y3, V3, _ = lockin.measureXYV(params['MaxVoltage'], 0, params['TimeVoltage']/2)
         
         data['X'] = np.hstack((X1, X2, X3))*1e12
         data['Y'] = np.hstack((Y1, Y2, Y3))*1e12
@@ -484,7 +490,7 @@ class mainFrame(wx.Frame):
         lbllockinCapSensitivity = wx.StaticText(scrollpanel, label="lockin sensitivity for capacitance measurement")
         lbllockinSensitivity = wx.StaticText(scrollpanel, label="lockin sensitivity for second harmonics measurement")
         lblAmplitude1 = wx.StaticText(scrollpanel, label="ac rms Amplitude for first harmonic measurement (mV)")
-        lblFrequency1 = wx.StaticText(scrollpanel, label="ac Frequency for first harmonic measurement (mV)")
+        lblFrequency1 = wx.StaticText(scrollpanel, label="ac Frequency for first harmonic measurement (Hz)")
         lbllockinSensitivity1 = wx.StaticText(scrollpanel, label="lockin sensitivity for first harmonics measurement")
                         
         self.txtMinVoltage = wx.TextCtrl(scrollpanel, name="MinVoltage")
@@ -601,7 +607,7 @@ class mainFrame(wx.Frame):
         
         # Add the plots in a GridSizer
         
-        gs = wx.GridSizer(2, 3, 10, 10)
+        gs = wx.GridSizer(3, 3, 10, 10)
                 
         self.plt00 = wxmplot.PlotPanel(panel, size=(1.,1.), messenger=self.UpdateStatusBar)
         self.plt01 = wxmplot.PlotPanel(panel, size=(1.,1.), messenger=self.UpdateStatusBar)
@@ -609,6 +615,9 @@ class mainFrame(wx.Frame):
         self.plt10 = wxmplot.PlotPanel(panel, size=(1.,1.), messenger=self.UpdateStatusBar)
         self.plt11 = wxmplot.PlotPanel(panel, size=(1.,1.), messenger=self.UpdateStatusBar)
         self.plt12 = wxmplot.PlotPanel(panel, size=(1.,1.), messenger=self.UpdateStatusBar)
+        self.plt20 = wxmplot.PlotPanel(panel, size=(1.,1.), messenger=self.UpdateStatusBar)
+        self.plt21 = wxmplot.PlotPanel(panel, size=(1.,1.), messenger=self.UpdateStatusBar)
+        self.plt22 = wxmplot.PlotPanel(panel, size=(1.,1.), messenger=self.UpdateStatusBar)
         
         gs.Add(self.plt00, 1, flag=wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT)
         gs.Add(self.plt01, 1, flag=wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT)
@@ -616,6 +625,9 @@ class mainFrame(wx.Frame):
         gs.Add(self.plt10, 1, flag=wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT)
         gs.Add(self.plt11, 1, flag=wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT)                
         gs.Add(self.plt12, 1, flag=wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT)
+        gs.Add(self.plt20, 1, flag=wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT)
+        gs.Add(self.plt21, 1, flag=wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT)
+        gs.Add(self.plt22, 1, flag=wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT)
         
         sizer.Add(gs, pos=(1,1), span=(2,1), flag=wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT)
         
@@ -628,6 +640,9 @@ class mainFrame(wx.Frame):
         self.plt10.plot([0], [0], linewidth=0.5, xlabel = "Time (s)", ylabel = "2nd harmonic offset (mV)", labelfontsize=6)
         self.plt11.plot([0], [0], linewidth = 0.5, xlabel = "Time (s)", ylabel = "2nd harmonic slope (pA/mV) * 1000", labelfontsize=6)
         self.plt12.plot([0], [0], linewidth = 0.5, xlabel = "Time (s)", ylabel = "3rd harmonic amplitude (pA)", labelfontsize=6)
+        self.plt20.plot([0], [0], linewidth=0.5, xlabel = "Time (s)", ylabel = "1st harmonic in-phase amplitude (pA)", labelfontsize=6)
+        self.plt21.plot([0], [0], linewidth = 0.5, xlabel = "Time (s)", ylabel = "1st harmonic out-of-phase amplitude (pA)", labelfontsize=6)
+        self.plt22.plot([0], [0], linewidth = 0.5, xlabel = "Time (s)", ylabel = "Conductance (pS)", labelfontsize=6)
         
         # Add a status textbox
 #        txtStdOut = wx.TextCtrl(panel, style=wx.HSCROLL|wx.VSCROLL|wx.TE_MULTILINE|wx.TE_READONLY)
@@ -963,6 +978,20 @@ class mainFrame(wx.Frame):
         self.UpdatePlot(self.plt12, [data['data'][j]['time'] for j in range(len(data['data']))],
                         [data['data'][j]['harm3X'] for j in range(len(data['data']))], linewidth = 0.5,
                         xlabel = "Time (s)", ylabel = "3rd harmonic in-phase amplitude (pA)", labelfontsize=6)
+
+        # In phase first harmonic
+        self.UpdatePlot(self.plt20, data['data'][-1]['h1t'], data['data'][-1]['h1X'], linewidth = 0.5,
+                        xlabel = "Time (s)", ylabel = "1st harmonic in-phase (pA)", labelfontsize=6)
+
+        # Out of phase first harmonic
+        self.UpdatePlot(self.plt21, data['data'][-1]['h1t'], data['data'][-1]['h1Y'], linewidth = 0.5,
+                        xlabel = "Time (s)", ylabel = "1st harmonic out-of-phase (pA)", labelfontsize=6)
+
+        # Conductance with time
+        self.UpdatePlot(self.plt22, [data['data'][j]['time'] for j in range(len(data['data']))],
+                        [data['data'][j]['harm1G'] for j in range(len(data['data']))], linewidth = 0.5,
+                        xlabel = "Time (s)", ylabel = "Conductance (pS)", labelfontsize=6)
+
 
         # Print to stdout. #DONE: make this prettier, or turn it into a listctrl
 #        print len(data['data'])-1, round(data['data'][-1]['time']), data['data'][-1]['C'], [data['pvals']['V0'][-1], data['pvals']['a'][-1], data['pvals']['b'][-1], data['pvals']['c'][-1]], data['data'][-1]['harm3']
