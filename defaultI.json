@@ -5,14 +5,14 @@
 	"dcInputGain": 1000.0,
 	"acAmplitude": 75.0,
 	"acFrequency": 1933.0,
-	"acAmplitude1": 10.0,
+	"acAmplitude1": 100.0,
 	"acFrequency1": 10.0,
 	"acInputGain": 1000.0,
 	"lockinFilter": "30 ms",
-    "lockinFilter1": "300 ms",
+    "lockinFilter1": "100 ms",
 	"lockinFilterSlope": "24 dB/oct",
 	"lockinCapSensitivity": "100 mV/nA",
 	"lockinSensitivity": "100 uV/pA",
-	"lockinSensitivity1": "100 uV/pA",
+	"lockinSensitivity1": "5 mV/nA",
 	"lockinReserve": "normal"
 }
