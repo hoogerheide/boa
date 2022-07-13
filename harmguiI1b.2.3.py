@@ -431,7 +431,8 @@ class mainFrame(wx.Frame):
     
     def __init__(self, parent, title):
         """ Initialize window appearance """
-        wx.Frame.__init__(self, parent, title=title, size=(1500,1120))
+        _, _, screenWidth, screenHeight = wx.GetClientDisplayRect()
+        wx.Frame.__init__(self, parent, title=title, size=(screenWidth,screenHeight))
 
         # Bind to event handler for closing main window
         self.Bind(wx.EVT_CLOSE, self.evtClose)
@@ -440,73 +441,87 @@ class mainFrame(wx.Frame):
         self.sb = self.CreateStatusBar(3)
         self.SetStatusWidths([180, -1, -1])
         
-        panel = wx.Panel(self)
+
+        panel = wx.lib.scrolledpanel.ScrolledPanel(self, -1)
+        panel.SetupScrolling()
         
         # Create main gridbagsizer object for entire panel
         sizer = wx.GridBagSizer(4,4)
 
         # Create input parameter boxes
+
+        scrollpanel = panel # for future implementation of a local scroll bar
         boxParams = wx.StaticBox(panel, label="Experiment parameters")
         vbox = wx.StaticBoxSizer(boxParams, wx.VERTICAL)
         
-        lblMinVoltage = wx.StaticText(panel, label="Minimum dc voltage (mV)")
-        lblMaxVoltage = wx.StaticText(panel, label="Maximum dc voltage (mV)")
-        lblTimeVoltage = wx.StaticText(panel, label="Scan time (s)")
-        lbldcInputGain = wx.StaticText(panel, label="dc voltage input gain (mV/V)")
-        lblAmplitude = wx.StaticText(panel, label="ac rms Amplitude (mV)")
-        lblFrequency = wx.StaticText(panel, label="ac Frequency (Hz)")
-        lblacInputGain = wx.StaticText(panel, label="ac voltage input gain (mV/V)")
-        lbllockinFilter = wx.StaticText(panel, label="lockin filter time constant")
-        lbllockinFilterSlope = wx.StaticText(panel, label="lockin filter slope")
-        lbllockinReserve = wx.StaticText(panel, label="lockin reserve")        
-        lbllockinCapSensitivity = wx.StaticText(panel, label="lockin sensitivity for capacitance measurement")
-        lbllockinSensitivity = wx.StaticText(panel, label="lockin sensitivity for harmonics measurement")
-                
-        self.txtMinVoltage = wx.TextCtrl(panel, name="MinVoltage")
-        self.txtMaxVoltage = wx.TextCtrl(panel, name="MaxVoltage")
-        self.txtTimeVoltage = wx.TextCtrl(panel, name="TimeVoltage")
-        self.txtdcInputGain = wx.TextCtrl(panel, name="dcInputGain")
-        self.txtAmplitude = wx.TextCtrl(panel, name="acAmplitude")
-        self.txtFrequency = wx.TextCtrl(panel, name="acFrequency")
-        self.txtacInputGain = wx.TextCtrl(panel, name="acInputGain")
-
+        lblMinVoltage = wx.StaticText(scrollpanel, label="Minimum dc voltage (mV)")
+        lblMaxVoltage = wx.StaticText(scrollpanel, label="Maximum dc voltage (mV)")
+        lblTimeVoltage = wx.StaticText(scrollpanel, label="Scan time (s)")
+        lbldcInputGain = wx.StaticText(scrollpanel, label="dc voltage input gain (mV/V)")
+        lblAmplitude = wx.StaticText(scrollpanel, label="ac rms Amplitude (mV)")
+        lblFrequency = wx.StaticText(scrollpanel, label="ac Frequency (Hz)")
+        lblacInputGain = wx.StaticText(scrollpanel, label="ac voltage input gain (mV/V)")
+        lbllockinFilter = wx.StaticText(scrollpanel, label="lockin filter time constant")
+        lbllockinFilterSlope = wx.StaticText(scrollpanel, label="lockin filter slope")
+        lbllockinReserve = wx.StaticText(scrollpanel, label="lockin reserve")        
+        lbllockinCapSensitivity = wx.StaticText(scrollpanel, label="lockin sensitivity for capacitance measurement")
+        lbllockinSensitivity = wx.StaticText(scrollpanel, label="lockin sensitivity for second harmonics measurement")
+        lblAmplitude1 = wx.StaticText(scrollpanel, label="ac rms Amplitude for first harmonic measurement (mV)")
+        lblFrequency1 = wx.StaticText(scrollpanel, label="ac Frequency for first harmonic measurement (mV)")
+        lbllockinSensitivity1 = wx.StaticText(scrollpanel, label="lockin sensitivity for first harmonics measurement")
+                        
+        self.txtMinVoltage = wx.TextCtrl(scrollpanel, name="MinVoltage")
+        self.txtMaxVoltage = wx.TextCtrl(scrollpanel, name="MaxVoltage")
+        self.txtTimeVoltage = wx.TextCtrl(scrollpanel, name="TimeVoltage")
+        self.txtdcInputGain = wx.TextCtrl(scrollpanel, name="dcInputGain")
+        self.txtAmplitude = wx.TextCtrl(scrollpanel, name="acAmplitude")
+        self.txtFrequency = wx.TextCtrl(scrollpanel, name="acFrequency")
+        self.txtacInputGain = wx.TextCtrl(scrollpanel, name="acInputGain")
+        self.txtAmplitude1 = wx.TextCtrl(scrollpanel, name="acAmplitude1")
+        self.txtFrequency1 = wx.TextCtrl(scrollpanel, name="acFrequency1")
+        
         filterkeys = [k for v,k in sorted([(v[0], k) for k, v in harmInstr.SR860.filterdict.items()])]
         filterslopekeys = [k for v,k in sorted([(v, k) for k, v in harmInstr.SR860.filterslopedict.items()])]
         sensitivitykeys = [k for v,k in sorted([(v, k) for k, v in harmInstr.SR860.sensitivitydict.items()])]
         reservekeys = [k for v,k in sorted([(v, k) for k, v in harmInstr.SR860.reservedict.items()])]
         reservekeys.append('auto')
         
-        self.cmblockinFilter = wx.ComboBox(panel, name="lockinFilter", choices=filterkeys)
-        self.cmblockinFilterSlope = wx.ComboBox(panel, name="lockinFilterSlope", choices=filterslopekeys)
-        self.cmblockinReserve = wx.ComboBox(panel, name="lockinReserve", choices=reservekeys)        
-        self.cmblockinCapSensitivity = wx.ComboBox(panel, name="lockinCapSensitivity", choices=sensitivitykeys)
-        self.cmblockinSensitivity = wx.ComboBox(panel, name="lockinSensitivity", choices=sensitivitykeys)        
-        
-        self.btnLoadParams = wx.Button(panel, label="Load Parameters")
-        self.btnSaveParams = wx.Button(panel, label="Save Parameters")
-        self.btnSetParams = wx.Button(panel, label="Set Parameters on Lockin")
+        self.cmblockinFilter = wx.ComboBox(scrollpanel, name="lockinFilter", choices=filterkeys)
+        self.cmblockinFilterSlope = wx.ComboBox(scrollpanel, name="lockinFilterSlope", choices=filterslopekeys)
+        self.cmblockinReserve = wx.ComboBox(scrollpanel, name="lockinReserve", choices=reservekeys)        
+        self.cmblockinCapSensitivity = wx.ComboBox(scrollpanel, name="lockinCapSensitivity", choices=sensitivitykeys)
+        self.cmblockinSensitivity = wx.ComboBox(scrollpanel, name="lockinSensitivity", choices=sensitivitykeys)        
+        self.cmblockinSensitivity1 = wx.ComboBox(scrollpanel, name="lockinSensitivity1", choices=sensitivitykeys)        
+                
+        self.btnLoadParams = wx.Button(scrollpanel, label="Load Parameters")
+        self.btnSaveParams = wx.Button(scrollpanel, label="Save Parameters")
+        self.btnSetParams = wx.Button(scrollpanel, label="Set Parameters on Lockin")
         
         # Define a list of textboxes for easily reading out parameters
         self.txtboxes = [self.txtMinVoltage, self.txtMaxVoltage, self.txtTimeVoltage, self.txtdcInputGain,
-                         self.txtAmplitude, self.txtFrequency, self.txtacInputGain,
-                         self.cmblockinFilter, self.cmblockinFilterSlope, self.cmblockinCapSensitivity, self.cmblockinSensitivity, self.cmblockinReserve]
+                         self.txtAmplitude, self.txtFrequency, self.txtAmplitude1, self.txtFrequency1, self.txtacInputGain,
+                         self.cmblockinFilter, self.cmblockinFilterSlope, self.cmblockinCapSensitivity, self.cmblockinSensitivity,
+                         self.cmblockinSensitivity1, self.cmblockinReserve]
         
         vbox.AddMany([(lblMinVoltage), (self.txtMinVoltage, 1, wx.EXPAND),
                     (lblMaxVoltage), (self.txtMaxVoltage, 1, wx.EXPAND),
                     (lblTimeVoltage), (self.txtTimeVoltage, 1, wx.EXPAND),
                     (lbldcInputGain), (self.txtdcInputGain, 1, wx.EXPAND),
+                    (lblAmplitude1), (self.txtAmplitude1, 1, wx.EXPAND),
+                    (lblFrequency1), (self.txtFrequency1, 1, wx.EXPAND),
                     (lblAmplitude), (self.txtAmplitude, 1, wx.EXPAND),
                     (lblFrequency), (self.txtFrequency, 1, wx.EXPAND),
                     (lblacInputGain), (self.txtacInputGain, 1, wx.EXPAND),
                     (lbllockinFilter), (self.cmblockinFilter, 1, wx.EXPAND),
                     (lbllockinFilterSlope), (self.cmblockinFilterSlope, 1, wx.EXPAND),
                     (lbllockinReserve), (self.cmblockinReserve, 1, wx.EXPAND),                    
+                    (lbllockinSensitivity1), (self.cmblockinSensitivity1, 1, wx.EXPAND),
                     (lbllockinCapSensitivity), (self.cmblockinCapSensitivity, 1, wx.EXPAND),                   
                     (lbllockinSensitivity), (self.cmblockinSensitivity, 1, wx.EXPAND)])
                     
-        vbox.Add(self.btnLoadParams, proportion=2, flag=wx.EXPAND|wx.TOP, border=10)
-        vbox.Add(self.btnSaveParams, proportion=2, flag=wx.EXPAND|wx.TOP, border=10)
-        vbox.Add(self.btnSetParams, proportion=2, flag=wx.EXPAND|wx.TOP, border=10)
+        vbox.Add(self.btnLoadParams, proportion=2, flag=wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT|wx.BOTTOM, border=5)
+        vbox.Add(self.btnSaveParams, proportion=2, flag=wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT|wx.BOTTOM, border=5)
+        vbox.Add(self.btnSetParams, proportion=2, flag=wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT|wx.BOTTOM, border=5)
         
         self.btnLoadParams.Bind(wx.EVT_BUTTON, self.LoadParams)
         self.btnSaveParams.Bind(wx.EVT_BUTTON, self.SaveParams)
@@ -888,7 +903,7 @@ class mainFrame(wx.Frame):
         
         """ JSON file output. Can fail if file is being read, so add error handler """
         try:
-            json.dump(data, open(self.fn, "w"), cls=NumpyAwareJSONEncoder)
+            json.dump(data, open(self.fn, "w"), cls=NumpyAwareJSONEncoder, indent="\t")
         except:
             pass
 
@@ -999,7 +1014,7 @@ class mainFrame(wx.Frame):
         
         if dialog.ShowModal() == wx.ID_OK:
             retfn = dialog.GetPath()
-            json.dump(params, open(retfn, "w"), cls=NumpyAwareJSONEncoder)
+            json.dump(params, open(retfn, "w"), cls=NumpyAwareJSONEncoder, indent="\t")
             
     def SetParams(self, event):
         """ Set parameters on lockin."""
@@ -1058,5 +1073,6 @@ class mainFrame(wx.Frame):
 if __name__ == '__main__':
     app = wx.App()
     frame = mainFrame(None, "Bilayer overtone analysis")
+    frame.SetPosition((0,0))
     app.MainLoop()
 

@@ -1,1 +1,17 @@
-{"MinVoltage": 50.0, "acInputGain": 1000.0, "MaxVoltage": -50.0, "lockinCapSensitivity": "100 mV/nA", "acFrequency": 1933.0, "lockinFilter": "100 ms", "acAmplitude": 75.0, "lockinSensitivity": "100 uV/pA", "lockinFilterSlope": "24 dB/oct", "TimeVoltage": 16, "dcInputGain": 1000.0, "lockinReserve": "normal"}
+{
+	"MinVoltage": 50.0,
+	"MaxVoltage": -50.0,
+	"TimeVoltage": 16.0,
+	"dcInputGain": 1000.0,
+	"acAmplitude": 75.0,
+	"acFrequency": 1933.0,
+	"acAmplitude1": 10.0,
+	"acFrequency1": 10.0,
+	"acInputGain": 1000.0,
+	"lockinFilter": "30 ms",
+	"lockinFilterSlope": "24 dB/oct",
+	"lockinCapSensitivity": "100 mV/nA",
+	"lockinSensitivity": "100 uV/pA",
+	"lockinSensitivity1": "100 uV/pA",
+	"lockinReserve": "normal"
+}
