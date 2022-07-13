@@ -344,15 +344,11 @@ class WorkerThread(Thread):
         lockin = self.lockin
         
         # set lockin filter settings
-        lockin.filter = params['lockinFilter']
         lockin.filterslope = params['lockinFilterSlope']
-        #lockin.ctrl.write("ISRC 2") # set to perform current measurement with I*10^6 sensitivity
-        lockin.sensitivity = params['lockinCapSensitivity']
-        lockin.amplitude = params['acAmplitude']/params['acInputGain']
 
-        # get time constant of filter
-        tc = lockin.filterdict[lockin.filter][1]
-        
+        # set phase to 0
+        lockin.phase = 0
+
         # Set a global scaling factor for sleep times. This comes about because
         # the sleep times were historically set for a 30 ms time constant and should
         # be proportional to the time constant.
@@ -360,14 +356,34 @@ class WorkerThread(Thread):
     
         # Vs = np.arange(params['MinVoltage'], params['MaxVoltage'] + params['TimeVoltage'], params['TimeVoltage'])
         data = dict(time=time.time()-params['startTime'], V=None, X=None, Xerr=None, Y=None, Yerr=None)
-        
-        # set frequency
-        lockin.frequency = params['acFrequency']
+
+        # collect first harmonic (in real units: convert [A]->[pA])
+        self.PostEvent(WorkerStatus(f"Measuring first harmonic amplitude..."))
+        lockin.harmonic = 1
+        lockin.filter = params['lockinFilter1']
+        tc = lockin.filterdict[lockin.filter][1] # get numerical time constant of filter
+        lockin.sensitivity = params['lockinSensitivity1']
+        lockin.frequency = params['acFrequency1']
+        lockin.amplitude = params['acAmplitude1'] / params['acInputGain']
+        time.sleep(1.5*tfactor*tc)
+        harm1data = lockin.collectPointsXY(5, 3*tc)
+        data['harm1X'] = harm1data[0]*1e12
+        data['harm1Y'] = harm1data[1]*1e12
+        data['harm1Xerr'] = harm1data[2]*1e12
+        data['harm1Yerr'] = harm1data[3]*1e12
+        data['harm1C'] = data['harm1X']*1e3/(2*np.pi*lockin.amplitude*params['acInputGain']*lockin.frequency)
+        data['harm1Cerr'] = data['harm1Xerr']*1e3/(2*np.pi*lockin.amplitude*params['acInputGain']*lockin.frequency)
+        data['harm1G'] = data['harm1Y']*1e3/(lockin.amplitude*params['acInputGain'])
+        data['harm1Gerr'] = data['harm1Yerr']*1e3/(lockin.amplitude*params['acInputGain'])
         
         # collect first harmonic (in real units: convert from [V]->[pF])
         self.PostEvent(WorkerStatus("Measuring capacitance..."))
         lockin.harmonic = 1
-        lockin.phase = 0
+        lockin.filter = params['lockinFilter']
+        tc = lockin.filterdict[lockin.filter][1] # get numerical time constant of filter
+        lockin.sensitivity = params['lockinCapSensitivity']
+        lockin.frequency = params['acFrequency']
+        lockin.amplitude = params['acAmplitude']/params['acInputGain']
         lockin.reserve = params['lockinReserve']
         #lockin.autoReserve()
         
@@ -660,6 +676,7 @@ class mainFrame(wx.Frame):
         EVT_DONE(self, self.evtWorkerDone)
         self.worker = None
         
+        self.panel = panel
         self.sizer = sizer          # So it can be called later
         self.sizer.Layout()
         
@@ -1067,6 +1084,7 @@ class mainFrame(wx.Frame):
         # Update GUI with new file name
         self.lblFileName.SetLabel(self.fn + " (" + startstring + ")")
         self.sizer.Layout()
+        self.panel.SetupScrolling()
         
         # Start data collection by initializing new worker thread
         self.worker = WorkerThread(self, harm2params)
