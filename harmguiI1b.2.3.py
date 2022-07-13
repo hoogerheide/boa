@@ -462,6 +462,7 @@ class mainFrame(wx.Frame):
         lblFrequency = wx.StaticText(scrollpanel, label="ac Frequency (Hz)")
         lblacInputGain = wx.StaticText(scrollpanel, label="ac voltage input gain (mV/V)")
         lbllockinFilter = wx.StaticText(scrollpanel, label="lockin filter time constant")
+        lbllockinFilter1 = wx.StaticText(scrollpanel, label="lockin filter time constant for first harmonics")
         lbllockinFilterSlope = wx.StaticText(scrollpanel, label="lockin filter slope")
         lbllockinReserve = wx.StaticText(scrollpanel, label="lockin reserve")        
         lbllockinCapSensitivity = wx.StaticText(scrollpanel, label="lockin sensitivity for capacitance measurement")
@@ -487,6 +488,7 @@ class mainFrame(wx.Frame):
         reservekeys.append('auto')
         
         self.cmblockinFilter = wx.ComboBox(scrollpanel, name="lockinFilter", choices=filterkeys)
+        self.cmblockinFilter1 = wx.ComboBox(scrollpanel, name="lockinFilter1", choices=filterkeys)
         self.cmblockinFilterSlope = wx.ComboBox(scrollpanel, name="lockinFilterSlope", choices=filterslopekeys)
         self.cmblockinReserve = wx.ComboBox(scrollpanel, name="lockinReserve", choices=reservekeys)        
         self.cmblockinCapSensitivity = wx.ComboBox(scrollpanel, name="lockinCapSensitivity", choices=sensitivitykeys)
@@ -500,7 +502,7 @@ class mainFrame(wx.Frame):
         # Define a list of textboxes for easily reading out parameters
         self.txtboxes = [self.txtMinVoltage, self.txtMaxVoltage, self.txtTimeVoltage, self.txtdcInputGain,
                          self.txtAmplitude, self.txtFrequency, self.txtAmplitude1, self.txtFrequency1, self.txtacInputGain,
-                         self.cmblockinFilter, self.cmblockinFilterSlope, self.cmblockinCapSensitivity, self.cmblockinSensitivity,
+                         self.cmblockinFilter, self.cmblockinFilter1, self.cmblockinFilterSlope, self.cmblockinCapSensitivity, self.cmblockinSensitivity,
                          self.cmblockinSensitivity1, self.cmblockinReserve]
         
         vbox.AddMany([(lblMinVoltage), (self.txtMinVoltage, 1, wx.EXPAND),
@@ -509,6 +511,7 @@ class mainFrame(wx.Frame):
                     (lbldcInputGain), (self.txtdcInputGain, 1, wx.EXPAND),
                     (lblAmplitude1), (self.txtAmplitude1, 1, wx.EXPAND),
                     (lblFrequency1), (self.txtFrequency1, 1, wx.EXPAND),
+                    (lbllockinFilter1), (self.cmblockinFilter1, 1, wx.EXPAND),
                     (lblAmplitude), (self.txtAmplitude, 1, wx.EXPAND),
                     (lblFrequency), (self.txtFrequency, 1, wx.EXPAND),
                     (lblacInputGain), (self.txtacInputGain, 1, wx.EXPAND),

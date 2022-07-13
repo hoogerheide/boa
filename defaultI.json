@@ -9,6 +9,7 @@
 	"acFrequency1": 10.0,
 	"acInputGain": 1000.0,
 	"lockinFilter": "30 ms",
+    "lockinFilter1": "300 ms",
 	"lockinFilterSlope": "24 dB/oct",
 	"lockinCapSensitivity": "100 mV/nA",
 	"lockinSensitivity": "100 uV/pA",
