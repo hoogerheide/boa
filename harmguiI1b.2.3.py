@@ -646,12 +646,14 @@ class mainFrame(wx.Frame):
         # Add a data list control
         self.lstData = wx.ListCtrl(panel, style=wx.LC_REPORT|wx.LC_HRULES|wx.LC_VRULES)
         colwidth = 190
-        self.lstData.InsertColumn(0, "N", width=40)
-        self.lstData.InsertColumn(1, "Time (s)", width=80)
-        self.lstData.InsertColumn(2, "C (pF)", width=80)
-        self.lstData.InsertColumn(3, "Second harmonic offset (mV)", width=colwidth)
-        self.lstData.InsertColumn(5, "Second harmonic slope (pA/mV)", width=colwidth)
-        self.lstData.InsertColumn(7, "Third harmonic amplitude (pA)", width=colwidth)
+        self.lstData.InsertColumn(self.lstData.GetColumnCount(), "N", width=40)
+        self.lstData.InsertColumn(self.lstData.GetColumnCount(), "Time (s)", width=80)
+        self.lstData.InsertColumn(self.lstData.GetColumnCount(), "C (pF)", width=80)
+        self.lstData.InsertColumn(self.lstData.GetColumnCount(), "G (S)", width=80)
+        self.lstData.InsertColumn(self.lstData.GetColumnCount(), "C2 (pF)", width=80)
+        self.lstData.InsertColumn(self.lstData.GetColumnCount(), "Second harmonic offset (mV)", width=colwidth)
+        self.lstData.InsertColumn(self.lstData.GetColumnCount(), "Second harmonic slope (pA/mV)", width=colwidth)
+        self.lstData.InsertColumn(self.lstData.GetColumnCount(), "Third harmonic amplitude (pA)", width=colwidth)
         sizer.Add(self.lstData, pos=(3,1), span=(1,1), flag=wx.EXPAND, border=5)
         
         # Add the file name label to the top of the screen
@@ -970,21 +972,18 @@ class mainFrame(wx.Frame):
         self.lstData.InsertItem(idx, "%i" % (len(data['data'])-1))
         #InsertStringItem deprecated ---> use InsertItem
         self.lstData.SetItem(idx, 1, "%i" % round(data['data'][-1]['time']))
-        #SetStringItem deprecated ---> use SetItem
-        self.lstData.SetItem(idx, 2, u"%0.6g \u00B1 %0.6g" % (data['data'][-1]['C'], data['data'][-1]['Cerr']))
-        #SetStringItem deprecated ---> use SetItem
-        self.lstData.SetItem(idx, 3, u"%0.6g \u00B1 %0.6g" % (data['pvals']['V0'][-1], data['perrs']['V0'][-1]))
-        #SetStringItem deprecated ---> use SetItem
-        self.lstData.SetItem(idx, 4, u"%0.6g \u00B1 %0.6g" % (data['pvals']['b'][-1], data['perrs']['b'][-1]))
-        #SetStringItem deprecated ---> use SetItem
-        self.lstData.SetItem(idx, 5, u"%0.6g \u00B1 %0.6g" % (data['data'][-1]['harm3X'], data['data'][-1]['harm3Xerr']))
-        #SetStringItem deprecated ---> use SetItem
+        self.lstData.SetItem(idx, 2, u"%0.6g \u00B1 %0.6g" % (data['data'][-1]['harm1C'], data['data'][-1]['harm1Cerr']))
+        self.lstData.SetItem(idx, 3, u"%0.6g \u00B1 %0.6g" % (data['data'][-1]['harm1G'], data['data'][-1]['harm1Gerr']))                
+        self.lstData.SetItem(idx, 4, u"%0.6g \u00B1 %0.6g" % (data['data'][-1]['C'], data['data'][-1]['Cerr']))
+        self.lstData.SetItem(idx, 5, u"%0.6g \u00B1 %0.6g" % (data['pvals']['V0'][-1], data['perrs']['V0'][-1]))
+        self.lstData.SetItem(idx, 6, u"%0.6g \u00B1 %0.6g" % (data['pvals']['b'][-1], data['perrs']['b'][-1]))
+        self.lstData.SetItem(idx, 7, u"%0.6g \u00B1 %0.6g" % (data['data'][-1]['harm3X'], data['data'][-1]['harm3Xerr']))
         self.lstData.EnsureVisible(idx)
         self.ResizelstData()
         
     def ResizelstData(self):
         """ Function for resizing lstData control """
-        widths = [40, 80, 0, 0, 0, 0]
+        widths = [40, 80, 0, 0, 0, 0, 0, 0]
         totalwidth = self.lstData.GetSize().GetWidth()
         
         for col in range(self.lstData.GetColumnCount()):
