@@ -494,8 +494,6 @@ class mainFrame(wx.Frame):
         lblSecondHarmonic = wx.StaticText(scrollpanel, label="Second harmonic", style=wx.ALIGN_CENTER_HORIZONTAL)
         lblSecondHarmonic.SetFont(wx.Font(wx.FontInfo().Bold()))
 
-        #lblMinVoltage = wx.StaticText(scrollpanel, label="Minimum dc voltage (mV)")
-        #lblMaxVoltage = wx.StaticText(scrollpanel, label="Maximum dc voltage (mV)")
         lbldcVoltageRange = wx.StaticText(scrollpanel, label="dc voltage range (mV)")
         lblHoldVoltage1 = wx.StaticText(scrollpanel, label="dc voltage (mV)")
         lblTimeVoltage = wx.StaticText(scrollpanel, label="Scan time (s)")
@@ -508,38 +506,38 @@ class mainFrame(wx.Frame):
         lbllockinFilter1 = wx.StaticText(scrollpanel, label="lockin filter time constant")
         lbllockinFilterSlope = wx.StaticText(scrollpanel, label="lockin filter slope")
         lbllockinReserve = wx.StaticText(scrollpanel, label="lockin reserve")        
-        #lbllockinCapSensitivity = wx.StaticText(scrollpanel, label="lockin sensitivity for capacitance measurement")
         lbllockinSensitivity = wx.StaticText(scrollpanel, label="lockin sensitivity")
         lblAmplitude1 = wx.StaticText(scrollpanel, label="ac rms Amplitude (mV)")
         lblFrequency1 = wx.StaticText(scrollpanel, label="ac Frequency (Hz)")
         lbllockinSensitivity1 = wx.StaticText(scrollpanel, label="lockin sensitivity")
-                        
-        self.txtMinVoltage = wx.TextCtrl(scrollpanel, name="MinVoltage")
-        self.txtMaxVoltage = wx.TextCtrl(scrollpanel, name="MaxVoltage")
-        self.txtHoldVoltage1 = wx.TextCtrl(scrollpanel, name="HoldVoltage1")
-        self.txtTimeVoltage = wx.TextCtrl(scrollpanel, name="TimeVoltage")
-        self.txtTimeVoltage1 = wx.TextCtrl(scrollpanel, name="TimeVoltage1")
-        self.txtdcInputGain = wx.TextCtrl(scrollpanel, name="dcInputGain")
-        self.txtAmplitude = wx.TextCtrl(scrollpanel, name="acAmplitude")
-        self.txtFrequency = wx.TextCtrl(scrollpanel, name="acFrequency")
-        self.txtacInputGain = wx.TextCtrl(scrollpanel, name="acInputGain")
-        self.txtAmplitude1 = wx.TextCtrl(scrollpanel, name="acAmplitude1")
-        self.txtFrequency1 = wx.TextCtrl(scrollpanel, name="acFrequency1")
-        
+
         filterkeys = [k for v,k in sorted([(v[0], k) for k, v in harmInstr.SR860.filterdict.items()])]
         filterslopekeys = [k for v,k in sorted([(v, k) for k, v in harmInstr.SR860.filterslopedict.items()])]
         sensitivitykeys = [k for v,k in sorted([(v, k) for k, v in harmInstr.SR860.sensitivitydict.items()])]
         reservekeys = [k for v,k in sorted([(v, k) for k, v in harmInstr.SR860.reservedict.items()])]
         reservekeys.append('auto')
-        
-        self.cmblockinFilter = wx.ComboBox(scrollpanel, name="lockinFilter", choices=filterkeys)
+
+        # add controls (in tab order)
+        self.txtAmplitude1 = wx.TextCtrl(scrollpanel, name="acAmplitude1")
+        self.txtFrequency1 = wx.TextCtrl(scrollpanel, name="acFrequency1")
         self.cmblockinFilter1 = wx.ComboBox(scrollpanel, name="lockinFilter1", choices=filterkeys)
-        self.cmblockinFilterSlope = wx.ComboBox(scrollpanel, name="lockinFilterSlope", choices=filterslopekeys)
-        self.cmblockinReserve = wx.ComboBox(scrollpanel, name="lockinReserve", choices=reservekeys)        
-        #self.cmblockinCapSensitivity = wx.ComboBox(scrollpanel, name="lockinCapSensitivity", choices=sensitivitykeys)
-        self.cmblockinSensitivity = wx.ComboBox(scrollpanel, name="lockinSensitivity", choices=sensitivitykeys)        
         self.cmblockinSensitivity1 = wx.ComboBox(scrollpanel, name="lockinSensitivity1", choices=sensitivitykeys)        
-                
+        self.txtTimeVoltage1 = wx.TextCtrl(scrollpanel, name="TimeVoltage1")
+        self.txtHoldVoltage1 = wx.TextCtrl(scrollpanel, name="HoldVoltage1")
+
+        self.txtAmplitude = wx.TextCtrl(scrollpanel, name="acAmplitude")
+        self.txtFrequency = wx.TextCtrl(scrollpanel, name="acFrequency")
+        self.cmblockinFilter = wx.ComboBox(scrollpanel, name="lockinFilter", choices=filterkeys)
+        self.cmblockinSensitivity = wx.ComboBox(scrollpanel, name="lockinSensitivity", choices=sensitivitykeys)        
+        self.txtTimeVoltage = wx.TextCtrl(scrollpanel, name="TimeVoltage")
+        self.txtMinVoltage = wx.TextCtrl(scrollpanel, name="MinVoltage")
+        self.txtMaxVoltage = wx.TextCtrl(scrollpanel, name="MaxVoltage")
+
+        self.txtdcInputGain = wx.TextCtrl(scrollpanel, name="dcInputGain")                
+        self.txtacInputGain = wx.TextCtrl(scrollpanel, name="acInputGain")
+        self.cmblockinFilterSlope = wx.ComboBox(scrollpanel, name="lockinFilterSlope", choices=filterslopekeys)
+        self.cmblockinReserve = wx.ComboBox(scrollpanel, name="lockinReserve", choices=reservekeys)
+        
         self.btnLoadParams = wx.Button(scrollpanel, label="Load Parameters")
         self.btnSaveParams = wx.Button(scrollpanel, label="Save Parameters")
         self.btnSetParams = wx.Button(scrollpanel, label="Set Parameters on Lockin")
@@ -578,8 +576,8 @@ class mainFrame(wx.Frame):
 
         sizerBoxGeneralParams.Add(sizerGeneralParams, flag=wx.EXPAND)
         sizerBoxHarmonicParams.Add(sizerHarmonicParams, flag=wx.EXPAND)
-        sizerParams.Add(sizerBoxGeneralParams, flag=wx.EXPAND)
         sizerParams.Add(sizerBoxHarmonicParams, flag=wx.EXPAND)
+        sizerParams.Add(sizerBoxGeneralParams, flag=wx.EXPAND)
 
         sizerParams.Add(self.btnLoadParams, proportion=1, flag=wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT|wx.BOTTOM, border=5)
         sizerParams.Add(self.btnSaveParams, proportion=1, flag=wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT|wx.BOTTOM, border=5)
