@@ -384,12 +384,13 @@ class WorkerThread(Thread):
         
         # collect second harmonic
         self.PostEvent(WorkerStatus("Measuring second harmonic..."))
-        lockin.sensitivity = params['lockinSensitivity']
-        #if lockin.hasOverload():
-        #    lockin.ctrl.write("ISRC 2") # if overloading input at highest sensitivity, back down to lower sensitivity
         lockin.harmonic = 2
-        # lockin.dcVoltage = Vs[0]/params['dcInputGain']
+        lockin.filter = params['lockinFilter']
+        tc = lockin.filterdict[lockin.filter][1] # get numerical time constant of filter
+        lockin.frequency = params['acFrequency']
+        lockin.amplitude = params['acAmplitude'] / params['acInputGain']
         lockin.reserve = params['lockinReserve']
+        lockin.sensitivity = params['lockinSensitivity']
         time.sleep(1.5*tfactor*tc)
         #lockin.autoPhase()
         #time.sleep(1.5*tfactor*tc)        
