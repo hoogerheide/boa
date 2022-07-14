@@ -782,7 +782,7 @@ class mainFrame(wx.Frame):
         selection = self.lstTags.GetFirstSelected()
         
         if selection != -1:
-            dialog = wx.TextEntryDialog(self, "Edit tag text:", defaultValue=self.lstTags.GetItem(selection, 1).GetText())
+            dialog = wx.TextEntryDialog(self, "Edit tag text:", value=self.lstTags.GetItem(selection, 1).GetText())
             
             if (dialog.ShowModal() == wx.ID_OK):
                 tagtext = dialog.GetValue()
