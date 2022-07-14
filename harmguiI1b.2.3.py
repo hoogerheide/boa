@@ -365,10 +365,10 @@ class WorkerThread(Thread):
         lockin.sensitivity = params['lockinSensitivity1']
         lockin.frequency = params['acFrequency1']
         lockin.amplitude = params['acAmplitude1'] / params['acInputGain']
-        #time.sleep(1.5*tfactor*tc)
+        time.sleep(10*tc)
         #harm1data = lockin.collectPointsXY(5, 3*tc)
-        time.sleep(1.5*tfactor*tc)
-        data['h1X'], data['h1Y'], tstep = lockin.measureXYt(0, params['TimeVoltage1'])
+        #time.sleep(1.5*tfactor*tc)
+        data['h1X'], data['h1Y'], tstep = lockin.measureXYt(params['HoldVoltage1'] / 1e3, params['TimeVoltage1'])
         data['h1X'], data['h1Y'] = data['h1X'] * 1e12, data['h1Y'] * 1e12
         data['h1t'] = tstep * np.arange(len(data['h1X']))
         data['harm1X'], data['harm1Xerr'] = np.mean(data['h1X']), np.std(data['h1X'])
@@ -387,9 +387,9 @@ class WorkerThread(Thread):
         lockin.amplitude = params['acAmplitude'] / params['acInputGain']
         lockin.reserve = params['lockinReserve']
         lockin.sensitivity = params['lockinSensitivity']
-        time.sleep(1.5*tfactor*tc)
+        #time.sleep(10*tc)
         #lockin.autoPhase()
-        #time.sleep(1.5*tfactor*tc)        
+        time.sleep(1.5*tfactor*tc)        
         
         # Set up sweep/scan, replace block
         X1, Y1, V1, _ = lockin.measureXYV(0, params['MinVoltage'], params['TimeVoltage']/4)
