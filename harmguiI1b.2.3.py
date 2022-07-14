@@ -472,30 +472,53 @@ class mainFrame(wx.Frame):
 
         # Create input parameter boxes
 
-        scrollpanel = panel # for future implementation of a local scroll bar
-        boxParams = wx.StaticBox(panel, label="Experiment parameters")
-        vbox = wx.StaticBoxSizer(boxParams, wx.VERTICAL)
-        
-        lblMinVoltage = wx.StaticText(scrollpanel, label="Minimum dc voltage (mV)")
-        lblMaxVoltage = wx.StaticText(scrollpanel, label="Maximum dc voltage (mV)")
+        # for future implementation of a local scroll bar
+        #panelParams = wx.lib.scrolledpanel.ScrolledPanel(panel, -1)
+        #panelParams = wx.Panel(panel)
+        scrollpanel = panel
+        #panelParams.SetupScrolling()
+        sizerParams = wx.BoxSizer(wx.VERTICAL)
+        boxGeneralParams = wx.StaticBox(scrollpanel, label="General parameters", style=wx.ALIGN_CENTER_HORIZONTAL)
+        sizerBoxGeneralParams = wx.StaticBoxSizer(boxGeneralParams, wx.VERTICAL)
+        boxHarmonicParams = wx.StaticBox(scrollpanel, label="Harmonics parameters", style=wx.ALIGN_CENTER_HORIZONTAL)
+        sizerBoxHarmonicParams = wx.StaticBoxSizer(boxHarmonicParams, wx.VERTICAL)
+        sizerGeneralParams = wx.FlexGridSizer(cols=2, vgap=5, hgap=10)
+        sizerGeneralParams.AddGrowableCol(0)
+        sizerGeneralParams.AddGrowableCol(1)
+        sizerHarmonicParams = wx.FlexGridSizer(cols=2, vgap=5, hgap=10)
+        #boxParams = wx.StaticBox(panel, label="General parameters")
+        #vbox = wx.StaticBoxSizer(boxParams, wx.VERTICAL)
+
+        lblFirstHarmonic = wx.StaticText(scrollpanel, label="First harmonic", style=wx.ALIGN_CENTER_HORIZONTAL)
+        lblFirstHarmonic.SetFont(wx.Font(wx.FontInfo().Bold()))
+        lblSecondHarmonic = wx.StaticText(scrollpanel, label="Second harmonic", style=wx.ALIGN_CENTER_HORIZONTAL)
+        lblSecondHarmonic.SetFont(wx.Font(wx.FontInfo().Bold()))
+
+        #lblMinVoltage = wx.StaticText(scrollpanel, label="Minimum dc voltage (mV)")
+        #lblMaxVoltage = wx.StaticText(scrollpanel, label="Maximum dc voltage (mV)")
+        lbldcVoltageRange = wx.StaticText(scrollpanel, label="dc voltage range (mV)")
+        lblHoldVoltage1 = wx.StaticText(scrollpanel, label="dc voltage (mV)")
         lblTimeVoltage = wx.StaticText(scrollpanel, label="Scan time (s)")
+        lblTimeVoltage1 = wx.StaticText(scrollpanel, label="Measurement time (s)")
         lbldcInputGain = wx.StaticText(scrollpanel, label="dc voltage input gain (mV/V)")
         lblAmplitude = wx.StaticText(scrollpanel, label="ac rms Amplitude (mV)")
         lblFrequency = wx.StaticText(scrollpanel, label="ac Frequency (Hz)")
         lblacInputGain = wx.StaticText(scrollpanel, label="ac voltage input gain (mV/V)")
         lbllockinFilter = wx.StaticText(scrollpanel, label="lockin filter time constant")
-        lbllockinFilter1 = wx.StaticText(scrollpanel, label="lockin filter time constant for first harmonics")
+        lbllockinFilter1 = wx.StaticText(scrollpanel, label="lockin filter time constant")
         lbllockinFilterSlope = wx.StaticText(scrollpanel, label="lockin filter slope")
         lbllockinReserve = wx.StaticText(scrollpanel, label="lockin reserve")        
-        lbllockinCapSensitivity = wx.StaticText(scrollpanel, label="lockin sensitivity for capacitance measurement")
-        lbllockinSensitivity = wx.StaticText(scrollpanel, label="lockin sensitivity for second harmonics measurement")
-        lblAmplitude1 = wx.StaticText(scrollpanel, label="ac rms Amplitude for first harmonic measurement (mV)")
-        lblFrequency1 = wx.StaticText(scrollpanel, label="ac Frequency for first harmonic measurement (Hz)")
-        lbllockinSensitivity1 = wx.StaticText(scrollpanel, label="lockin sensitivity for first harmonics measurement")
+        #lbllockinCapSensitivity = wx.StaticText(scrollpanel, label="lockin sensitivity for capacitance measurement")
+        lbllockinSensitivity = wx.StaticText(scrollpanel, label="lockin sensitivity")
+        lblAmplitude1 = wx.StaticText(scrollpanel, label="ac rms Amplitude (mV)")
+        lblFrequency1 = wx.StaticText(scrollpanel, label="ac Frequency (Hz)")
+        lbllockinSensitivity1 = wx.StaticText(scrollpanel, label="lockin sensitivity")
                         
         self.txtMinVoltage = wx.TextCtrl(scrollpanel, name="MinVoltage")
         self.txtMaxVoltage = wx.TextCtrl(scrollpanel, name="MaxVoltage")
+        self.txtHoldVoltage1 = wx.TextCtrl(scrollpanel, name="HoldVoltage1")
         self.txtTimeVoltage = wx.TextCtrl(scrollpanel, name="TimeVoltage")
+        self.txtTimeVoltage1 = wx.TextCtrl(scrollpanel, name="TimeVoltage1")
         self.txtdcInputGain = wx.TextCtrl(scrollpanel, name="dcInputGain")
         self.txtAmplitude = wx.TextCtrl(scrollpanel, name="acAmplitude")
         self.txtFrequency = wx.TextCtrl(scrollpanel, name="acFrequency")
@@ -513,7 +536,7 @@ class mainFrame(wx.Frame):
         self.cmblockinFilter1 = wx.ComboBox(scrollpanel, name="lockinFilter1", choices=filterkeys)
         self.cmblockinFilterSlope = wx.ComboBox(scrollpanel, name="lockinFilterSlope", choices=filterslopekeys)
         self.cmblockinReserve = wx.ComboBox(scrollpanel, name="lockinReserve", choices=reservekeys)        
-        self.cmblockinCapSensitivity = wx.ComboBox(scrollpanel, name="lockinCapSensitivity", choices=sensitivitykeys)
+        #self.cmblockinCapSensitivity = wx.ComboBox(scrollpanel, name="lockinCapSensitivity", choices=sensitivitykeys)
         self.cmblockinSensitivity = wx.ComboBox(scrollpanel, name="lockinSensitivity", choices=sensitivitykeys)        
         self.cmblockinSensitivity1 = wx.ComboBox(scrollpanel, name="lockinSensitivity1", choices=sensitivitykeys)        
                 
@@ -522,37 +545,51 @@ class mainFrame(wx.Frame):
         self.btnSetParams = wx.Button(scrollpanel, label="Set Parameters on Lockin")
         
         # Define a list of textboxes for easily reading out parameters
-        self.txtboxes = [self.txtMinVoltage, self.txtMaxVoltage, self.txtTimeVoltage, self.txtdcInputGain,
+        self.txtboxes = [self.txtMinVoltage, self.txtMaxVoltage, self.txtHoldVoltage1, self.txtTimeVoltage, self.txtTimeVoltage1, self.txtdcInputGain,
                          self.txtAmplitude, self.txtFrequency, self.txtAmplitude1, self.txtFrequency1, self.txtacInputGain,
-                         self.cmblockinFilter, self.cmblockinFilter1, self.cmblockinFilterSlope, self.cmblockinCapSensitivity, self.cmblockinSensitivity,
+                         self.cmblockinFilter, self.cmblockinFilter1, self.cmblockinFilterSlope, self.cmblockinSensitivity,
                          self.cmblockinSensitivity1, self.cmblockinReserve]
-        
-        vbox.AddMany([(lblMinVoltage), (self.txtMinVoltage, 1, wx.EXPAND),
-                    (lblMaxVoltage), (self.txtMaxVoltage, 1, wx.EXPAND),
-                    (lblTimeVoltage), (self.txtTimeVoltage, 1, wx.EXPAND),
-                    (lbldcInputGain), (self.txtdcInputGain, 1, wx.EXPAND),
-                    (lblAmplitude1), (self.txtAmplitude1, 1, wx.EXPAND),
-                    (lblFrequency1), (self.txtFrequency1, 1, wx.EXPAND),
-                    (lbllockinFilter1), (self.cmblockinFilter1, 1, wx.EXPAND),
-                    (lblAmplitude), (self.txtAmplitude, 1, wx.EXPAND),
-                    (lblFrequency), (self.txtFrequency, 1, wx.EXPAND),
-                    (lblacInputGain), (self.txtacInputGain, 1, wx.EXPAND),
-                    (lbllockinFilter), (self.cmblockinFilter, 1, wx.EXPAND),
-                    (lbllockinFilterSlope), (self.cmblockinFilterSlope, 1, wx.EXPAND),
-                    (lbllockinReserve), (self.cmblockinReserve, 1, wx.EXPAND),                    
-                    (lbllockinSensitivity1), (self.cmblockinSensitivity1, 1, wx.EXPAND),
-                    (lbllockinCapSensitivity), (self.cmblockinCapSensitivity, 1, wx.EXPAND),                   
-                    (lbllockinSensitivity), (self.cmblockinSensitivity, 1, wx.EXPAND)])
-                    
-        vbox.Add(self.btnLoadParams, proportion=2, flag=wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT|wx.BOTTOM, border=5)
-        vbox.Add(self.btnSaveParams, proportion=2, flag=wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT|wx.BOTTOM, border=5)
-        vbox.Add(self.btnSetParams, proportion=2, flag=wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT|wx.BOTTOM, border=5)
+
+        sizerGeneralParams.AddMany([(lbldcInputGain), (lblacInputGain),
+                                    (self.txtdcInputGain, 1, wx.EXPAND), (self.txtacInputGain, 1, wx.EXPAND),
+                                    (lbllockinFilterSlope), (lbllockinReserve),
+                                    (self.cmblockinFilterSlope, 1, wx.EXPAND), (self.cmblockinReserve, 1, wx.EXPAND),
+                                    ])
+
+        sizerHarmonicParams.AddMany([(lblFirstHarmonic, 1, wx.ALIGN_CENTER), (lblSecondHarmonic, 1, wx.ALIGN_CENTER),
+                                    (lblAmplitude1), (lblAmplitude),
+                                    (self.txtAmplitude1, 1, wx.EXPAND), (self.txtAmplitude, 1, wx.EXPAND),
+                                    (lblFrequency1), (lblFrequency),
+                                    (self.txtFrequency1, 1, wx.EXPAND), (self.txtFrequency, 1, wx.EXPAND),
+                                    (lbllockinFilter1), (lbllockinFilter),
+                                    (self.cmblockinFilter1, 1, wx.EXPAND), (self.cmblockinFilter, 1, wx.EXPAND),
+                                    (lbllockinSensitivity1), (lbllockinSensitivity),
+                                    (self.cmblockinSensitivity1, 1, wx.EXPAND), (self.cmblockinSensitivity, 1, wx.EXPAND),
+                                    (lblTimeVoltage1), (lblTimeVoltage),
+                                    (self.txtTimeVoltage1, 1, wx.EXPAND), (self.txtTimeVoltage, 1, wx.EXPAND),
+                                    ])
+
+        boxDCRange = wx.BoxSizer(wx.HORIZONTAL)
+        boxDCRange.AddMany([(self.txtMinVoltage, 1, wx.EXPAND|wx.RIGHT,5), (self.txtMaxVoltage, 1, wx.EXPAND|wx.LEFT,5)])
+
+        sizerHarmonicParams.AddMany([(lblHoldVoltage1), (lbldcVoltageRange),
+                                    (self.txtHoldVoltage1, 1, wx.EXPAND), (boxDCRange, 1, 0),
+                                    ])
+
+        sizerBoxGeneralParams.Add(sizerGeneralParams, flag=wx.EXPAND)
+        sizerBoxHarmonicParams.Add(sizerHarmonicParams, flag=wx.EXPAND)
+        sizerParams.Add(sizerBoxGeneralParams, flag=wx.EXPAND)
+        sizerParams.Add(sizerBoxHarmonicParams, flag=wx.EXPAND)
+
+        sizerParams.Add(self.btnLoadParams, proportion=1, flag=wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT|wx.BOTTOM, border=5)
+        sizerParams.Add(self.btnSaveParams, proportion=1, flag=wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT|wx.BOTTOM, border=5)
+        sizerParams.Add(self.btnSetParams, proportion=1, flag=wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT|wx.BOTTOM, border=5)
         
         self.btnLoadParams.Bind(wx.EVT_BUTTON, self.LoadParams)
         self.btnSaveParams.Bind(wx.EVT_BUTTON, self.SaveParams)
         self.btnSetParams.Bind(wx.EVT_BUTTON, self.SetParams)
-        
-        sizer.Add(vbox, pos=(1,0))
+
+        sizer.Add(sizerParams, pos=(1,0))
         
         # Add tag controls
         

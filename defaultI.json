@@ -1,7 +1,9 @@
 {
 	"MinVoltage": 50.0,
 	"MaxVoltage": -50.0,
+    "HoldVoltage1": 0.0,
 	"TimeVoltage": 16.0,
+    "TimeVoltage1": 16.0,
 	"dcInputGain": 1000.0,
 	"acAmplitude": 75.0,
 	"acFrequency": 1933.0,
