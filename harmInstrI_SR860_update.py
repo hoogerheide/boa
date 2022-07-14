@@ -551,6 +551,83 @@ class SR860(object):
         return numpy.mean(Xs), numpy.mean(Ys), numpy.std(Xs), numpy.std(Ys)
 
     # Function to run scan and capture, unpack and return X, Y, V
+    # TODO: remove overlap with measureXYV
+    def measureXYt(self,dclevel,scnTime):
+        # Initialize lockin to correct state for scan measurement
+        # Calculate capture length based on scan time, move to params
+        # Voltage- -5.00V < V < 5.00V
+        #print scnTime, type(scnTime)
+        initlevel = self.dcVoltage
+        self.dcVoltage = dclevel
+        # Seconds or msec- 0 = 8ms 
+        tConstant=self.filterdict[self.inv_filterdict[int(self.ctrl.query("OFLT?")[:-1])]][1]
+        #print 'tConstant', tConstant
+        maxRate = str2num(self.ctrl.query("CAPTURERATEMAX?"))[0]
+        #print 'maxRate', maxRate
+        fCuttoff= 2/tConstant
+        # Write function to calculate fCuttoff for low-pass filter based on tConstant
+        maxArray = maxRate/(2**numpy.arange(21))
+        time.sleep(10*tConstant)
+        # Initialize lockin to correct state for capture measurement
+        nFactor = numpy.where(maxArray>fCuttoff)[0][-1]
+        capLength = int(numpy.ceil(maxArray[nFactor]*1*scnTime*8/1000))
+        self.ctrl.write("CAPTURECFG XY") # Set capture configuration to X and Y
+        self.ctrl.write("CAPTURERATE %i" % nFactor) # Set capture rate to maximum rate /2^n for n=0
+        self.ctrl.write("CAPTURELEN %i" % capLength) # Set capture length according to formula in params
+        tStep = 1./str2num(self.ctrl.query("CAPTURERATE?"))[0]
+        starttime = time.time()
+        self.ctrl.write("CAPTURESTART ONE, IMM")
+
+        # Begin data capture, get only after proper elapsed time,
+        #  or CAPTURESTAT reflects done (if capLength is too long)
+        state = 0
+        while ((time.time() - starttime) < scnTime) & (state < 4):
+            state=str2num(self.ctrl.query("CAPTURESTAT?"))[0]
+            #print(state, time.time() - starttime)
+
+        # Stop data capture before capture get commands
+        self.ctrl.write("CAPTURESTOP")
+        
+        # Data capture results
+        # Unpacking binary data- time start now
+        t = time.time()-starttime
+        capLengthAvail = str2num(self.ctrl.query("CAPTUREBYTES?"))[0]/1024 # 1024 bytes/block of data 
+
+        getLength = min(int(numpy.ceil(capLengthAvail)), capLength)
+        #print capLengthAvail, capLength, getLength
+        getRange = range(0,getLength,64)
+        #getRange.append(getLength+1)
+        data = []
+        for start in getRange:
+            cmd = "CAPTUREGET? %i,%i" % (int(start), min(64, getLength))
+            getLength -= 64
+            #print cmd
+            self.ctrl.write(cmd)
+            buf = self.ctrl.read_raw() # Read buffer contents
+        
+            #print len(buf), maxArray[nFactor], scnTime, maxArray[nFactor]*scnTime
+            hdr = struct.unpack_from('<cc', buf) # Read binary header in little endian format
+            datalength = struct.unpack_from('<' + 'c'*int(hdr[1]), buf, 2)
+            datalength = [d.decode() for d in datalength]
+            data = data + list(struct.unpack_from('<%if' % (int("".join(datalength))/4), buf, 2 + int(hdr[1])))
+            #alldata = alldata + data
+            #print alldata[0:10], alldata[-10:], len(data), len(alldata)
+
+        # data = alldata
+        Y = numpy.array(data[1::2])
+        X = numpy.array(data[0::2])
+        # Chop off trailing data in buffer after stop capture
+        #idx = numpy.where(t>scnTime)[0]
+        idx = int(numpy.floor(maxArray[nFactor]*1*scnTime))
+        X=X[0:idx]
+        Y=Y[0:idx]
+        #tStep = maxArray[nFactor]
+        #vTime = numpy.arange(0,scnTime,tStep)
+        #print "End of collection", idx, len(X*Y*V)
+        self.dcVoltage = initlevel
+        return X, Y, tStep
+
+    # Function to run scan and capture, unpack and return X, Y, V
     def measureXYV(self,scnStart,scnEnd,scnTime):
         # Initialize lockin to correct state for scan measurement
         # Calculate capture length based on scan time, move to params

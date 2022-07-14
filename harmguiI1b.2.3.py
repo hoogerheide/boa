@@ -368,13 +368,9 @@ class WorkerThread(Thread):
         #time.sleep(1.5*tfactor*tc)
         #harm1data = lockin.collectPointsXY(5, 3*tc)
         time.sleep(1.5*tfactor*tc)
-        data['h1X'], data['h1Y'], _, tstep = lockin.measureXYV(1, 0, params['TimeVoltage1'])
+        data['h1X'], data['h1Y'], tstep = lockin.measureXYt(0, params['TimeVoltage1'])
         data['h1X'], data['h1Y'] = data['h1X'] * 1e12, data['h1Y'] * 1e12
         data['h1t'] = tstep * np.arange(len(data['h1X']))
-        #data['harm1X'] = harm1data[0]*1e12
-        #data['harm1Y'] = harm1data[1]*1e12
-        #data['harm1Xerr'] = harm1data[2]*1e12
-        #data['harm1Yerr'] = harm1data[3]*1e12
         data['harm1X'], data['harm1Xerr'] = np.mean(data['h1X']), np.std(data['h1X'])
         data['harm1Y'], data['harm1Yerr'] = np.mean(data['h1Y']), np.std(data['h1Y'])
         data['C'] = np.abs(data['harm1Y'])*1e3/(2*np.pi*lockin.amplitude*params['acInputGain']*lockin.frequency)
