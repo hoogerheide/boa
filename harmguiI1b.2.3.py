@@ -396,9 +396,9 @@ class WorkerThread(Thread):
         #time.sleep(1.5*tfactor*tc)        
         
         # Set up sweep/scan, replace block
-        X1, Y1, V1, _ = lockin.measureXYV(0, params['MinVoltage'], params['TimeVoltage']/2)
-        X2, Y2, V2, _ = lockin.measureXYV(params['MinVoltage'], params['MaxVoltage'], params['TimeVoltage'])
-        X3, Y3, V3, _ = lockin.measureXYV(params['MaxVoltage'], 0, params['TimeVoltage']/2)
+        X1, Y1, V1, _ = lockin.measureXYV(0, params['MinVoltage'], params['TimeVoltage']/4)
+        X2, Y2, V2, _ = lockin.measureXYV(params['MinVoltage'], params['MaxVoltage'], params['TimeVoltage']/2)
+        X3, Y3, V3, _ = lockin.measureXYV(params['MaxVoltage'], 0, params['TimeVoltage']/4)
         
         data['X'] = np.hstack((X1, X2, X3))*1e12
         data['Y'] = np.hstack((Y1, Y2, Y3))*1e12
@@ -980,14 +980,14 @@ class mainFrame(wx.Frame):
         self.UpdatePlot(self.plt10, data['data'][-1]['V'], data['data'][-1]['X'], dy=data['data'][-1]['Xerr'],
         xlabel = "dc Voltage (mV)", ylabel="2nd harmonic in-phase (pA)", linewidth=1, labelfontsize=6)
         x = np.arange(data['params']['MinVoltage'], data['params']['MaxVoltage'], (data['params']['MaxVoltage']-data['params']['MinVoltage'])/100)
-        self.plt00.oplot(x, fitfunc(x, data['pvalX'][0], data['pvalX'][1]))
+        self.plt10.oplot(x, fitfunc(x, data['pvalX'][0], data['pvalX'][1]))
         
         # Second plot: Phase
         #self.UpdatePlot(self.plt01, data['data'][-1]['V'], data['data'][-1]['Theta'], dy=data['data'][-1]['Thetaerr'], marker='o',
         #                xlabel = "dc Voltage (mV)", ylabel="2nd harmonic phase (deg)", linewidth=0, labelfontsize=6)
         self.UpdatePlot(self.plt11, data['data'][-1]['V'], data['data'][-1]['Y'], dy=data['data'][-1]['Yerr'],
         xlabel = "dc Voltage (mV)", ylabel="2nd harmonic out-of-phase (pA)", linewidth=1, labelfontsize=6)
-        self.plt01.oplot(x, fitfunc(x, data['pvalY'][0], data['pvalY'][1]))
+        self.plt11.oplot(x, fitfunc(x, data['pvalY'][0], data['pvalY'][1]))
 
         # Third plot: Capacitance
         self.UpdatePlot(self.plt12, [data['data'][j]['time'] for j in range(len(data['data']))],
