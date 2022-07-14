@@ -619,7 +619,7 @@ class mainFrame(wx.Frame):
         
         # Add the plots in a GridSizer
         
-        gs = wx.GridSizer(3, 3, 10, 10)
+        gs = wx.GridSizer(3, 3, 0, 0)
                 
         self.plt00 = wxmplot.PlotPanel(panel, size=(1.,1.), messenger=self.UpdateStatusBar)
         self.plt01 = wxmplot.PlotPanel(panel, size=(1.,1.), messenger=self.UpdateStatusBar)
@@ -631,31 +631,31 @@ class mainFrame(wx.Frame):
         self.plt21 = wxmplot.PlotPanel(panel, size=(1.,1.), messenger=self.UpdateStatusBar)
         self.plt22 = wxmplot.PlotPanel(panel, size=(1.,1.), messenger=self.UpdateStatusBar)
         
-        gs.Add(self.plt00, 1, flag=wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT)
-        gs.Add(self.plt01, 1, flag=wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT)
-        gs.Add(self.plt02, 1, flag=wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT)        
-        gs.Add(self.plt10, 1, flag=wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT)
-        gs.Add(self.plt11, 1, flag=wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT)                
-        gs.Add(self.plt12, 1, flag=wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT)
-        gs.Add(self.plt20, 1, flag=wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT)
-        gs.Add(self.plt21, 1, flag=wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT)
-        gs.Add(self.plt22, 1, flag=wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT)
+        gs.Add(self.plt00, 1, flag=wx.EXPAND) #|wx.TOP|wx.LEFT|wx.RIGHT)
+        gs.Add(self.plt01, 1, flag=wx.EXPAND)
+        gs.Add(self.plt02, 1, flag=wx.EXPAND)
+        gs.Add(self.plt10, 1, flag=wx.EXPAND)
+        gs.Add(self.plt11, 1, flag=wx.EXPAND)
+        gs.Add(self.plt12, 1, flag=wx.EXPAND)
+        gs.Add(self.plt20, 1, flag=wx.EXPAND)
+        gs.Add(self.plt21, 1, flag=wx.EXPAND)
+        gs.Add(self.plt22, 1, flag=wx.EXPAND)
         
         sizer.Add(gs, pos=(1,1), span=(2,1), flag=wx.EXPAND|wx.TOP|wx.LEFT|wx.RIGHT)
         
         # Initialize the plots. For some reason plt00 has to be plotted twice
         # for labelfontsize to take effect
-        self.plt00.plot([0], [0], linewidth=0.5, xlabel = "Time (s)", ylabel = "1st harmonic in-phase amplitude (pA)", labelfontsize=6)
+        self.plt00.plot([0], [0], linewidth=0.5, xlabel = "Time (s)", ylabel = "1st harmonic\nin-phase amplitude (pA)", labelfontsize=6)
         #self.plt00.plot([0], [0], linewidth=0.5, xlabel = "Time (s)", ylabel = "1st harmonic in-phase amplitude (pA)", labelfontsize=6)
-        self.plt01.plot([0], [0], linewidth = 0.5, xlabel = "Time (s)", ylabel = "1st harmonic out-of-phase amplitude (pA)", labelfontsize=6)
+        self.plt01.plot([0], [0], linewidth = 0.5, xlabel = "Time (s)", ylabel = "1st harmonic\nout-of-phase amplitude (pA)", labelfontsize=6)
         self.plt02.plot([0], [0], linewidth = 0.5, xlabel = "Time (s)", ylabel = "Conductance (pS)", labelfontsize=6)
-        self.plt10.plot([0.], [0.], dy=[0.], xlabel = "dc Voltage (mV)", ylabel="2nd harmonic in-phase amplitude (pA)", linewidth=0, marker="o", labelfontsize=6)
+        self.plt10.plot([0.], [0.], xlabel = "dc Voltage (mV)", ylabel="2nd harmonic\nin-phase amplitude (pA)", linewidth=0, labelfontsize=6)
         #self.plt10.plot([0.], [0.], dy=[0.], xlabel = "dc Voltage (mV)", ylabel="2nd harmonic in-phase amplitude (pA)", linewidth=0, marker="o", labelfontsize=6)
-        self.plt11.plot([0.], [0.], dy =[0.], marker='o', xlabel = "dc Voltage (mV)", ylabel="2nd harmonic out-of-phase amplitude (pA)", linewidth=0, labelfontsize=6)
+        self.plt11.plot([0.], [0.], xlabel = "dc Voltage (mV)", ylabel="2nd harmonic\nout-of-phase amplitude (pA)", linewidth=0, labelfontsize=6)
         self.plt12.plot([0], [0], linewidth=0.5, xlabel = "Time (s)", ylabel = "Capacitance (pF)", labelfontsize=6)
-        self.plt20.plot([0], [0], linewidth=0.5, xlabel = "Time (s)", ylabel = "2nd harmonic offset (mV)", labelfontsize=6)
-        self.plt21.plot([0], [0], linewidth = 0.5, xlabel = "Time (s)", ylabel = "2nd harmonic slope (pA/mV) * 1000", labelfontsize=6)
-        self.plt22.plot([0], [0], linewidth = 0.5, xlabel = "Time (s)", ylabel = "3rd harmonic amplitude (pA)", labelfontsize=6)
+        self.plt20.plot([0], [0], linewidth=0.5, xlabel = "Time (s)", ylabel = "2nd harmonic\noffset (mV)", labelfontsize=6)
+        self.plt21.plot([0], [0], linewidth = 0.5, xlabel = "Time (s)", ylabel = "2nd harmonic\nslope (pA/mV) * 1000", labelfontsize=6)
+        self.plt22.plot([0], [0], linewidth = 0.5, xlabel = "Time (s)", ylabel = "3rd harmonic\namplitude (pA)", labelfontsize=6)
         
         # Add a status textbox
 #        txtStdOut = wx.TextCtrl(panel, style=wx.HSCROLL|wx.VSCROLL|wx.TE_MULTILINE|wx.TE_READONLY)
@@ -961,11 +961,11 @@ class mainFrame(wx.Frame):
 
         # In phase first harmonic
         self.UpdatePlot(self.plt00, data['data'][-1]['h1t'], data['data'][-1]['h1X'], linewidth = 1,
-                        xlabel = "Time (s)", ylabel = "1st harmonic in-phase (pA)", labelfontsize=6)
+                        xlabel = "Time (s)", ylabel = "1st harmonic\nin-phase (pA)", labelfontsize=6)
 
         # Out of phase first harmonic
         self.UpdatePlot(self.plt01, data['data'][-1]['h1t'], data['data'][-1]['h1Y'], linewidth = 1,
-                        xlabel = "Time (s)", ylabel = "1st harmonic out-of-phase (pA)", labelfontsize=6)
+                        xlabel = "Time (s)", ylabel = "1st harmonic\nout-of-phase (pA)", labelfontsize=6)
 
         # Conductance with time
         self.UpdatePlot(self.plt02, [data['data'][j]['time'] for j in range(len(data['data']))],
@@ -973,16 +973,16 @@ class mainFrame(wx.Frame):
                         xlabel = "Time (s)", ylabel = "Conductance (pS)", labelfontsize=6)
 
         # First plot: Last second harmonic measurement
-        self.UpdatePlot(self.plt10, data['data'][-1]['V'], data['data'][-1]['X'], dy=data['data'][-1]['Xerr'],
-        xlabel = "dc Voltage (mV)", ylabel="2nd harmonic in-phase (pA)", linewidth=1, labelfontsize=6)
+        self.UpdatePlot(self.plt10, data['data'][-1]['V'], data['data'][-1]['X'],
+        xlabel = "dc Voltage (mV)", ylabel="2nd harmonic\nin-phase (pA)", linewidth=1, labelfontsize=6)
         x = np.arange(data['params']['MinVoltage'], data['params']['MaxVoltage'], (data['params']['MaxVoltage']-data['params']['MinVoltage'])/100)
         self.plt10.oplot(x, fitfunc(x, data['pvalX'][0], data['pvalX'][1]))
         
         # Second plot: Phase
         #self.UpdatePlot(self.plt01, data['data'][-1]['V'], data['data'][-1]['Theta'], dy=data['data'][-1]['Thetaerr'], marker='o',
         #                xlabel = "dc Voltage (mV)", ylabel="2nd harmonic phase (deg)", linewidth=0, labelfontsize=6)
-        self.UpdatePlot(self.plt11, data['data'][-1]['V'], data['data'][-1]['Y'], dy=data['data'][-1]['Yerr'],
-        xlabel = "dc Voltage (mV)", ylabel="2nd harmonic out-of-phase (pA)", linewidth=1, labelfontsize=6)
+        self.UpdatePlot(self.plt11, data['data'][-1]['V'], data['data'][-1]['Y'],
+        xlabel = "dc Voltage (mV)", ylabel="2nd harmonic\nout-of-phase (pA)", linewidth=1, labelfontsize=6)
         self.plt11.oplot(x, fitfunc(x, data['pvalY'][0], data['pvalY'][1]))
 
         # Third plot: Capacitance
@@ -993,17 +993,17 @@ class mainFrame(wx.Frame):
         # Fourth plot: 2nd harmonic offset
         self.UpdatePlot(self.plt20, [data['data'][j]['time'] for j in range(len(data['data']))],
                         data['pvals']['V0'], linewidth=1,
-                        xlabel = "Time (s)", ylabel = "2nd harmonic offset (mV)", labelfontsize=6)
+                        xlabel = "Time (s)", ylabel = "2nd harmonic\noffset (mV)", labelfontsize=6)
                         
         # Fifth plot: 2nd harmonic slope.
         self.UpdatePlot(self.plt21, [data['data'][j]['time'] for j in range(len(data['data']))],
                         data['pvals']['b']*1000, linewidth = 1,
-                        xlabel = "Time (s)", ylabel = "2nd harmonic slope (pA/mV) * 1000", labelfontsize=6)
+                        xlabel = "Time (s)", ylabel = "2nd harmonic\nslope (pA/mV) * 1000", labelfontsize=6)
         
         # Sixth plot: 3rd harmonic amplitude, in-phase component only
         self.UpdatePlot(self.plt22, [data['data'][j]['time'] for j in range(len(data['data']))],
                         [data['data'][j]['harm3X'] for j in range(len(data['data']))], linewidth = 1,
-                        xlabel = "Time (s)", ylabel = "3rd harmonic in-phase amplitude (pA)", labelfontsize=6)
+                        xlabel = "Time (s)", ylabel = "3rd harmonic\nin-phase amplitude (pA)", labelfontsize=6)
 
         # Print to stdout. #DONE: make this prettier, or turn it into a listctrl
 #        print len(data['data'])-1, round(data['data'][-1]['time']), data['data'][-1]['C'], [data['pvals']['V0'][-1], data['pvals']['a'][-1], data['pvals']['b'][-1], data['pvals']['c'][-1]], data['data'][-1]['harm3']
