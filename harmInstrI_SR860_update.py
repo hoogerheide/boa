@@ -392,6 +392,7 @@ class SR860(object):
         # Initialize lockin to correct state for second harmonics measurement
         self.ctrl.write("RTRG SIN") # set reference to "SINE"- double check correct command, it may be default setting
         self.ctrl.write("RSRC INT") # set reference to internal, may be obsolete with FREQINT
+        self.ctrl.write("IVMD CURR") # set to perform current measurement at 1*10^6 (Mohm) sensitivity- confirm correct state for SR860
         self.ctrl.write("ICUR 1MEG") # set to perform current measurement at 1*10^6 (Mohm) sensitivity- confirm correct state for SR860
 
     def ReadValues(self):
