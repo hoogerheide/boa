@@ -620,16 +620,17 @@ class mainFrame(wx.Frame):
         # Add the plots in a GridSizer
         
         gs = wx.GridSizer(3, 3, 0, 0)
+        plotsize = (300, 100)
                 
-        self.plt00 = wxmplot.PlotPanel(panel, size=(1.,1.), messenger=self.UpdateStatusBar)
-        self.plt01 = wxmplot.PlotPanel(panel, size=(1.,1.), messenger=self.UpdateStatusBar)
-        self.plt02 = wxmplot.PlotPanel(panel, size=(1.,1.), messenger=self.UpdateStatusBar)
-        self.plt10 = wxmplot.PlotPanel(panel, size=(1.,1.), messenger=self.UpdateStatusBar)
-        self.plt11 = wxmplot.PlotPanel(panel, size=(1.,1.), messenger=self.UpdateStatusBar)
-        self.plt12 = wxmplot.PlotPanel(panel, size=(1.,1.), messenger=self.UpdateStatusBar)
-        self.plt20 = wxmplot.PlotPanel(panel, size=(1.,1.), messenger=self.UpdateStatusBar)
-        self.plt21 = wxmplot.PlotPanel(panel, size=(1.,1.), messenger=self.UpdateStatusBar)
-        self.plt22 = wxmplot.PlotPanel(panel, size=(1.,1.), messenger=self.UpdateStatusBar)
+        self.plt00 = wxmplot.PlotPanel(panel, size=plotsize, messenger=self.UpdateStatusBar)
+        self.plt01 = wxmplot.PlotPanel(panel, size=plotsize, messenger=self.UpdateStatusBar)
+        self.plt02 = wxmplot.PlotPanel(panel, size=plotsize, messenger=self.UpdateStatusBar)
+        self.plt10 = wxmplot.PlotPanel(panel, size=plotsize, messenger=self.UpdateStatusBar)
+        self.plt11 = wxmplot.PlotPanel(panel, size=plotsize, messenger=self.UpdateStatusBar)
+        self.plt12 = wxmplot.PlotPanel(panel, size=plotsize, messenger=self.UpdateStatusBar)
+        self.plt20 = wxmplot.PlotPanel(panel, size=plotsize, messenger=self.UpdateStatusBar)
+        self.plt21 = wxmplot.PlotPanel(panel, size=plotsize, messenger=self.UpdateStatusBar)
+        self.plt22 = wxmplot.PlotPanel(panel, size=plotsize, messenger=self.UpdateStatusBar)
         
         gs.Add(self.plt00, 1, flag=wx.EXPAND) #|wx.TOP|wx.LEFT|wx.RIGHT)
         gs.Add(self.plt01, 1, flag=wx.EXPAND)

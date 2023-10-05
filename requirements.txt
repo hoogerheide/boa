@@ -1,0 +1,7 @@
+numpy
+matplotlib
+pyvisa
+pyvisa-py
+scipy
+wxpython
+wxmplot

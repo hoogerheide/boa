@@ -7,7 +7,7 @@
 
 from matplotlib.pyplot import step
 import numpy
-from visa import ResourceManager
+from pyvisa import ResourceManager
 import time
 import struct
 
